@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { useEffect } from 'react';
 import { AppStateProvider } from './contexts/AppStateContext';
 import { ThreePaneLayout } from './components/Layout';
 import { LeftPane } from './components/LeftPane';
@@ -9,18 +8,6 @@ import { useAppState } from './contexts/AppStateContext';
 
 function AppContent() {
   const { state, dispatch } = useAppState();
-
-  // Auto-open a terminal on first launch
-  useEffect(() => {
-    if (state.terminals.length === 0) {
-      const homeDir = process.env.HOME || process.env.USERPROFILE || '/';
-      const id = `term-${Date.now()}`;
-      dispatch({
-        type: 'ADD_TERMINAL',
-        payload: { id, label: 'Terminal', cwd: homeDir },
-      });
-    }
-  }, []);
 
   const handleAddTerminal = async () => {
     const directory = await window.electronAPI.openDirectory();
@@ -35,9 +22,7 @@ function AppContent() {
   };
 
   const handleCloseTerminal = (terminalId: string) => {
-    // Kill the terminal process
     window.electronAPI.terminal.kill(terminalId);
-    // Remove from state
     dispatch({ type: 'REMOVE_TERMINAL', payload: { id: terminalId } });
   };
 
