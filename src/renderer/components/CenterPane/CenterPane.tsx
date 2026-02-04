@@ -6,10 +6,10 @@ import { FileView } from './FileView';
 export function CenterPane() {
   const { state } = useAppState();
   const activeItem = getActiveItem(state);
-
-  // Render all terminals but only show the active one
-  // This preserves terminal state when switching
   const terminals = state.terminals;
+
+  const isShowingFile = activeItem?.type === 'file';
+  const isShowingTerminal = activeItem?.type === 'terminal';
 
   if (terminals.length === 0) {
     return (
@@ -19,29 +19,34 @@ export function CenterPane() {
     );
   }
 
-  // If active item is a file, show file view
-  if (activeItem?.type === 'file') {
-    return (
-      <div className="pane-content file-view-pane">
-        <FileView 
-          filePath={activeItem.item.path}
-          fileName={activeItem.item.name}
-        />
-      </div>
-    );
-  }
-
-  // Show terminals (all rendered, only active visible)
+  // Always render both terminals and file view to prevent unmounting
+  // Use CSS to show/hide based on active item
   return (
-    <div className="pane-content terminal-pane">
-      {terminals.map(terminal => (
-        <TerminalView
-          key={terminal.id}
-          terminalId={terminal.id}
-          cwd={terminal.cwd}
-          isActive={state.activeTerminalId === terminal.id && activeItem?.type === 'terminal'}
-        />
-      ))}
-    </div>
+    <>
+      {/* Terminals - always rendered to preserve state */}
+      <div 
+        className="pane-content terminal-pane"
+        style={{ display: isShowingTerminal ? 'block' : 'none' }}
+      >
+        {terminals.map(terminal => (
+          <TerminalView
+            key={terminal.id}
+            terminalId={terminal.id}
+            cwd={terminal.cwd}
+            isActive={state.activeTerminalId === terminal.id && isShowingTerminal}
+          />
+        ))}
+      </div>
+
+      {/* File view - only render when a file is selected */}
+      {isShowingFile && activeItem && (
+        <div className="pane-content file-view-pane">
+          <FileView 
+            filePath={activeItem.item.path}
+            fileName={activeItem.item.name}
+          />
+        </div>
+      )}
+    </>
   );
 }

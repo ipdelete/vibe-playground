@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
@@ -15,6 +15,30 @@ export function TerminalView({ terminalId, cwd, isActive }: TerminalViewProps) {
   const xtermRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const initializedRef = useRef(false);
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced resize handler
+  const handleResize = useCallback(() => {
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current);
+    }
+    
+    resizeTimeoutRef.current = setTimeout(() => {
+      if (fitAddonRef.current && xtermRef.current && terminalRef.current) {
+        // Only fit if container has dimensions
+        const { offsetWidth, offsetHeight } = terminalRef.current;
+        if (offsetWidth > 0 && offsetHeight > 0) {
+          try {
+            fitAddonRef.current.fit();
+            const { cols, rows } = xtermRef.current;
+            window.electronAPI.terminal.resize(terminalId, cols, rows);
+          } catch (e) {
+            // Ignore fit errors during rapid resize
+          }
+        }
+      }
+    }, 100); // 100ms debounce
+  }, [terminalId]);
 
   useEffect(() => {
     if (!terminalRef.current || initializedRef.current) return;
@@ -30,20 +54,26 @@ export function TerminalView({ terminalId, cwd, isActive }: TerminalViewProps) {
       },
       fontFamily: 'Consolas, "Courier New", monospace',
       fontSize: 14,
+      allowProposedApi: true,
     });
 
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
 
     term.open(terminalRef.current);
-    fitAddon.fit();
-
+    
     xtermRef.current = term;
     fitAddonRef.current = fitAddon;
     initializedRef.current = true;
 
-    // Create PTY in main process
-    window.electronAPI.terminal.create(terminalId, cwd);
+    // Initial fit after a short delay to ensure container is ready
+    setTimeout(() => {
+      fitAddon.fit();
+      // Create PTY in main process with correct size
+      window.electronAPI.terminal.create(terminalId, cwd);
+      // Send initial size
+      window.electronAPI.terminal.resize(terminalId, term.cols, term.rows);
+    }, 50);
 
     // Handle terminal input
     term.onData((data) => {
@@ -57,33 +87,30 @@ export function TerminalView({ terminalId, cwd, isActive }: TerminalViewProps) {
       }
     });
 
-    // Handle resize
-    const handleResize = () => {
-      if (fitAddonRef.current && xtermRef.current) {
-        fitAddonRef.current.fit();
-        window.electronAPI.terminal.resize(
-          terminalId,
-          xtermRef.current.cols,
-          xtermRef.current.rows
-        );
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
+    // Use ResizeObserver for container size changes
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+    resizeObserver.observe(terminalRef.current);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
     };
-  }, [terminalId, cwd]);
+  }, [terminalId, cwd, handleResize]);
 
   // Fit terminal when becomes active
   useEffect(() => {
-    if (isActive && fitAddonRef.current) {
+    if (isActive && fitAddonRef.current && xtermRef.current) {
+      // Delay to ensure container is visible and has dimensions
       setTimeout(() => {
-        fitAddonRef.current?.fit();
-      }, 0);
+        handleResize();
+        xtermRef.current?.focus();
+      }, 50);
     }
-  }, [isActive]);
+  }, [isActive, handleResize]);
 
   return (
     <div

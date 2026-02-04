@@ -24,9 +24,7 @@ const createWindow = (): void => {
 
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
-  if (process.env.NODE_ENV === 'development') {
-    mainWindow.webContents.openDevTools();
-  }
+  // DevTools can be opened manually with Ctrl+Shift+I
 
   // Set up terminal IPC handlers
   setupTerminalIPC(mainWindow);
