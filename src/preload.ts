@@ -1,5 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
+export interface FileEntry {
+  name: string;
+  path: string;
+  isDirectory: boolean;
+  children?: FileEntry[];
+}
+
 export interface ElectronAPI {
   openDirectory: () => Promise<string | null>;
   terminal: {
@@ -9,6 +16,10 @@ export interface ElectronAPI {
     kill: (id: string) => Promise<void>;
     onData: (callback: (id: string, data: string) => void) => void;
     onExit: (callback: (id: string, exitCode: number) => void) => void;
+  };
+  fs: {
+    readDirectory: (dirPath: string) => Promise<FileEntry[]>;
+    readFile: (filePath: string) => Promise<string>;
   };
 }
 
@@ -25,6 +36,10 @@ const electronAPI: ElectronAPI = {
     onExit: (callback) => {
       ipcRenderer.on('terminal:exit', (_event, id, exitCode) => callback(id, exitCode));
     },
+  },
+  fs: {
+    readDirectory: (dirPath) => ipcRenderer.invoke('fs:readDirectory', dirPath),
+    readFile: (filePath) => ipcRenderer.invoke('fs:readFile', filePath),
   },
 };
 

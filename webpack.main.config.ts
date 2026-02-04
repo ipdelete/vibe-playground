@@ -17,4 +17,8 @@ export const mainConfig: Configuration = {
   resolve: {
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.css', '.json'],
   },
+  // Don't bundle node-pty - it has native modules that need to be loaded at runtime
+  externals: {
+    'node-pty': 'commonjs node-pty',
+  },
 };

@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import { setupTerminalIPC } from './main/ipc/terminal';
+import { setupFileIPC } from './main/ipc/files';
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -29,6 +30,9 @@ const createWindow = (): void => {
 
   // Set up terminal IPC handlers
   setupTerminalIPC(mainWindow);
+  
+  // Set up file system IPC handlers
+  setupFileIPC();
 };
 
 // IPC Handlers

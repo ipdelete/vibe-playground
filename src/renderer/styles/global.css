@@ -224,3 +224,54 @@ body {
 .context-menu button:hover {
   background-color: #094771;
 }
+
+/* File Tree */
+.file-tree-container {
+  padding: 0;
+}
+
+.file-tree {
+  font-size: 13px;
+}
+
+.file-tree-node {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 3px;
+  gap: 6px;
+  user-select: none;
+}
+
+.file-tree-node:hover {
+  background-color: #2a2d2e;
+}
+
+.file-tree-node .file-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.file-tree-node .file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-tree-node .loading {
+  color: #888;
+  font-size: 11px;
+}
+
+.file-tree-loading,
+.file-tree-error,
+.file-tree-empty {
+  padding: 16px 8px;
+  color: #888;
+  font-size: 12px;
+}
+
+.file-tree-error {
+  color: #f48771;
+}
