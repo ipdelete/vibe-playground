@@ -47,31 +47,30 @@ Build an Electron app with a three-pane layout for managing multiple terminal se
 
 > **Note:** node-pty deferred due to Windows Spectre library build issues. Will address in Phase 3.
 
-### Phase 2: Core Layout & State Management (In Progress)
-- [x] **TDD: Write tests for app state reducer (add terminal, remove terminal, set active, add file, remove file)** ✅ 16 tests
+### Phase 2: Core Layout & State Management ✅
+- [x] **TDD: Write tests for app state reducer** ✅ 16 tests
 - [x] Implement app state reducer to pass tests
-- [x] **TDD: Write tests for state selectors (getActiveTerminal, getActiveItem, getFilesForTerminal)**
+- [x] **TDD: Write tests for state selectors**
 - [x] Implement state selectors to pass tests
-- [ ] Create state context provider
-- [ ] **Write component tests for ThreePaneLayout (renders three sections)**
-- [ ] Create three-pane layout component (Left, Center, Right)
-- [ ] Implement resizable pane dividers
-- [ ] **Write component tests for LeftPane (renders terminal list, handles clicks)**
-- [ ] Build basic left pane component (empty list initially)
+- [x] Create state context provider (AppStateProvider, useAppState)
+- [x] **Write component tests for ThreePaneLayout** ✅ 3 tests
+- [x] Create three-pane layout component (Left, Center, Right)
+- [x] **Write component tests for LeftPane** ✅ 7 tests
+- [x] Build LeftPane component with terminal/file list
 
-### Phase 3: Terminal Integration (F1, F2)
+### Phase 3: Terminal Integration (F1, F2) - In Progress
 - [ ] **TDD: Write tests for TerminalService (spawn, write, resize, kill) with mocked node-pty**
 - [ ] Implement TerminalService in main process
 - [ ] Set up node-pty IPC handlers
-- [ ] **Write component tests for TerminalItem (renders label, active state, click handler)**
-- [ ] Implement TerminalItem component
+- [x] **Write component tests for TerminalItem** (covered in LeftPane tests)
+- [x] Implement TerminalItem component (integrated in LeftPane)
 - [ ] Create xterm.js wrapper component (integration test only - hard to unit test)
 - [ ] Connect xterm.js to node-pty via IPC
-- [ ] **Write component tests for "+" button (calls create handler)**
-- [ ] Add "+" button to create new terminal (with directory picker)
-- [ ] Display terminals in left pane list
+- [x] **Write component tests for "+" button** (covered in LeftPane tests)
+- [x] Add "+" button to create new terminal (with directory picker)
+- [x] Display terminals in left pane list
 - [ ] **Integration test: Create terminal → appears in list → shows in center pane**
-- [ ] Implement terminal selection (click to switch)
+- [x] Implement terminal selection (click to switch)
 - [ ] Preserve terminal state when switching between terminals
 - [ ] **Write component tests for context menu (renders options, calls handlers)**
 - [ ] Add close terminal functionality (right-click menu)

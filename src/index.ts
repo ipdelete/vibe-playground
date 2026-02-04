@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { setupTerminalIPC } from './main/ipc/terminal';
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -25,6 +26,9 @@ const createWindow = (): void => {
   if (process.env.NODE_ENV === 'development') {
     mainWindow.webContents.openDevTools();
   }
+
+  // Set up terminal IPC handlers
+  setupTerminalIPC(mainWindow);
 };
 
 // IPC Handlers

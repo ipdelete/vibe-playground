@@ -182,3 +182,18 @@ body {
   color: #666;
   margin-top: 4px;
 }
+
+/* Terminal */
+.terminal-pane {
+  padding: 0;
+  height: 100%;
+}
+
+.terminal-container {
+  height: 100%;
+}
+
+.terminal-container .xterm {
+  height: 100%;
+  padding: 8px;
+}
