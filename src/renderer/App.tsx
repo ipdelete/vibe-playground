@@ -27,7 +27,37 @@ function AppContent() {
   };
 
   const handleFileClick = (filePath: string, fileName: string) => {
-    // Will be implemented in Phase 5
+    // Check if file is already open in the current terminal
+    const activeTerminal = state.terminals.find(t => t.id === state.activeTerminalId);
+    if (!activeTerminal) return;
+
+    const existingFile = activeTerminal.openFiles.find(f => f.path === filePath);
+    if (existingFile) {
+      // File already open, just switch to it
+      dispatch({ 
+        type: 'SET_ACTIVE_ITEM', 
+        payload: { id: existingFile.id, terminalId: activeTerminal.id } 
+      });
+    } else {
+      // Open new file
+      const fileId = `file-${Date.now()}`;
+      dispatch({
+        type: 'ADD_FILE',
+        payload: {
+          terminalId: activeTerminal.id,
+          file: {
+            id: fileId,
+            path: filePath,
+            name: fileName,
+            parentTerminalId: activeTerminal.id,
+          },
+        },
+      });
+      dispatch({ 
+        type: 'SET_ACTIVE_ITEM', 
+        payload: { id: fileId, terminalId: activeTerminal.id } 
+      });
+    }
   };
 
   return (

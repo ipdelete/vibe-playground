@@ -275,3 +275,28 @@ body {
 .file-tree-error {
   color: #f48771;
 }
+
+/* File View (Monaco Editor) */
+.file-view-pane {
+  padding: 0;
+  height: 100%;
+}
+
+.file-view-container {
+  height: 100%;
+  width: 100%;
+}
+
+.file-view-loading,
+.file-view-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #888;
+  font-size: 14px;
+}
+
+.file-view-error {
+  color: #f48771;
+}

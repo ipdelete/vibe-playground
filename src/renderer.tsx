@@ -3,6 +3,22 @@ import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './renderer/App';
 
+// Suppress benign ResizeObserver error from Monaco Editor
+const resizeObserverErr = window.onerror;
+window.onerror = (message, ...args) => {
+  if (typeof message === 'string' && message.includes('ResizeObserver loop')) {
+    return true; // Suppress
+  }
+  return resizeObserverErr ? resizeObserverErr(message, ...args) : false;
+};
+
+// Also suppress in error event handler
+window.addEventListener('error', (e) => {
+  if (e.message?.includes('ResizeObserver loop')) {
+    e.stopImmediatePropagation();
+  }
+});
+
 console.log('Renderer script loading...');
 
 const container = document.getElementById('root');

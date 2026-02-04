@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useAppState, getActiveItem } from '../../contexts/AppStateContext';
 import { TerminalView } from './TerminalView';
+import { FileView } from './FileView';
 
 export function CenterPane() {
   const { state } = useAppState();
@@ -21,12 +22,11 @@ export function CenterPane() {
   // If active item is a file, show file view
   if (activeItem?.type === 'file') {
     return (
-      <div className="pane-content file-view">
-        <div className="file-placeholder">
-          <p>File: {activeItem.item.name}</p>
-          <p className="path">{activeItem.item.path}</p>
-          <p className="hint">(Monaco Editor will be added in Phase 5)</p>
-        </div>
+      <div className="pane-content file-view-pane">
+        <FileView 
+          filePath={activeItem.item.path}
+          fileName={activeItem.item.name}
+        />
       </div>
     );
   }

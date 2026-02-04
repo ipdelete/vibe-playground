@@ -35,6 +35,17 @@ const config: ForgeConfig = {
       devServer: {
         hot: false,
         liveReload: false,
+        client: {
+          overlay: {
+            runtimeErrors: (error: Error) => {
+              // Suppress benign ResizeObserver error from Monaco
+              if (error.message?.includes('ResizeObserver loop')) {
+                return false;
+              }
+              return true;
+            },
+          },
+        },
       },
       renderer: {
         config: rendererConfig,
