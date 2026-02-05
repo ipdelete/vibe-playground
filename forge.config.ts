@@ -21,9 +21,10 @@ const config: ForgeConfig = {
   rebuildConfig: {},
   makers: [
     new MakerSquirrel({}),
-    new MakerZIP({}, ['darwin']),
-    new MakerRpm({}),
+    new MakerZIP({}, ['darwin', 'linux']),
     new MakerDeb({}),
+    // MakerRpm disabled - fails with prebuilt native modules containing ARM binaries
+    // new MakerRpm({}),
   ],
   plugins: [
     new AutoUnpackNativesPlugin({}),
