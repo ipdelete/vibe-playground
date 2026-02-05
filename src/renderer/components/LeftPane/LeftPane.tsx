@@ -1,11 +1,13 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAppState } from '../../contexts/AppStateContext';
 import { Icon, getFileIcon } from '../Icon';
 
 interface LeftPaneProps {
   onAddTerminal: () => void;
   onCloseTerminal: (id: string) => void;
+  renamingTerminalId?: string | null;
+  onRenameComplete?: (id: string, newLabel: string | null) => void;
 }
 
 interface ContextMenuState {
@@ -16,7 +18,7 @@ interface ContextMenuState {
   fileId: string | null;
 }
 
-export function LeftPane({ onAddTerminal, onCloseTerminal }: LeftPaneProps) {
+export function LeftPane({ onAddTerminal, onCloseTerminal, renamingTerminalId, onRenameComplete }: LeftPaneProps) {
   const { state, dispatch } = useAppState();
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     visible: false,
@@ -25,6 +27,31 @@ export function LeftPane({ onAddTerminal, onCloseTerminal }: LeftPaneProps) {
     terminalId: null,
     fileId: null,
   });
+  const [renameValue, setRenameValue] = useState('');
+  const renameInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle rename mode
+  useEffect(() => {
+    if (renamingTerminalId) {
+      const terminal = state.terminals.find(t => t.id === renamingTerminalId);
+      if (terminal) {
+        setRenameValue(terminal.label);
+        setTimeout(() => renameInputRef.current?.select(), 0);
+      }
+    }
+  }, [renamingTerminalId, state.terminals]);
+
+  const handleRenameKeyDown = (e: React.KeyboardEvent, terminalId: string) => {
+    if (e.key === 'Enter') {
+      onRenameComplete?.(terminalId, renameValue.trim() || null);
+    } else if (e.key === 'Escape') {
+      onRenameComplete?.(terminalId, null);
+    }
+  };
+
+  const handleRenameBlur = (terminalId: string) => {
+    onRenameComplete?.(terminalId, renameValue.trim() || null);
+  };
 
   const handleTerminalClick = (terminalId: string) => {
     dispatch({ type: 'SET_ACTIVE_TERMINAL', payload: { id: terminalId } });
@@ -109,7 +136,19 @@ export function LeftPane({ onAddTerminal, onCloseTerminal }: LeftPaneProps) {
                   <span className="terminal-icon">
                     <Icon name="terminal" size="sm" />
                   </span>
-                  <span className="terminal-label">{terminal.label}</span>
+                  {renamingTerminalId === terminal.id ? (
+                    <input
+                      ref={renameInputRef}
+                      className="terminal-rename-input"
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onKeyDown={(e) => handleRenameKeyDown(e, terminal.id)}
+                      onBlur={() => handleRenameBlur(terminal.id)}
+                      autoFocus
+                    />
+                  ) : (
+                    <span className="terminal-label">{terminal.label}</span>
+                  )}
                 </div>
                 {terminal.openFiles.length > 0 && (
                   <ul className="file-list">

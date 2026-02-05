@@ -59,6 +59,12 @@ npm start
 6. **Close Items**: Right-click on terminals or files for context menu options
 
 ### Keyboard Shortcuts
+- `Ctrl+Tab` - Next terminal
+- `Ctrl+Shift+Tab` - Previous terminal
+- `Ctrl+Alt+\` - New terminal
+- `Ctrl+W` - Close current terminal/file
+- `F2` - Rename terminal
+- `Ctrl+?` - Show keyboard shortcuts help
 - `Ctrl+Shift+I` - Open DevTools
 
 ## Tech Stack

@@ -1,14 +1,18 @@
 import * as React from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { ThreePaneLayout } from './components/Layout';
 import { LeftPane } from './components/LeftPane';
 import { CenterPane } from './components/CenterPane';
 import { RightPane } from './components/RightPane';
-import { AppStateProvider, useAppState } from './contexts/AppStateContext';
+import { HotkeyHelp } from './components/HotkeyHelp';
+import { AppStateProvider, useAppState, getActiveItem } from './contexts/AppStateContext';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 function AppContent() {
   const { state, dispatch } = useAppState();
   const hasRestoredRef = useRef(false);
+  const [showHotkeyHelp, setShowHotkeyHelp] = useState(false);
+  const [renamingTerminalId, setRenamingTerminalId] = useState<string | null>(null);
 
   // Restore session on mount
   useEffect(() => {
@@ -89,6 +93,45 @@ function AppContent() {
     dispatch({ type: 'REMOVE_TERMINAL', payload: { id: terminalId } });
   };
 
+  // Keyboard shortcut handlers
+  const cycleTerminal = useCallback((direction: 1 | -1) => {
+    if (state.terminals.length === 0) return;
+    const currentIndex = state.terminals.findIndex(t => t.id === state.activeTerminalId);
+    const nextIndex = (currentIndex + direction + state.terminals.length) % state.terminals.length;
+    dispatch({ type: 'SET_ACTIVE_TERMINAL', payload: { id: state.terminals[nextIndex].id } });
+  }, [state.terminals, state.activeTerminalId, dispatch]);
+
+  const handleCloseCurrentItem = useCallback(() => {
+    const activeItem = getActiveItem(state);
+    if (!activeItem) return;
+    
+    if (activeItem.type === 'terminal') {
+      handleCloseTerminal(activeItem.item.id);
+    } else if (activeItem.type === 'file') {
+      dispatch({
+        type: 'REMOVE_FILE',
+        payload: { terminalId: activeItem.terminal.id, fileId: activeItem.item.id },
+      });
+    }
+  }, [state, dispatch]);
+
+  const handleRenameTerminal = useCallback(() => {
+    if (state.activeTerminalId) {
+      setRenamingTerminalId(state.activeTerminalId);
+    }
+  }, [state.activeTerminalId]);
+
+  const shortcuts = useMemo(() => [
+    { key: 'Tab', ctrl: true, action: () => cycleTerminal(1) },
+    { key: 'Tab', ctrl: true, shift: true, action: () => cycleTerminal(-1) },
+    { key: '\\', ctrl: true, alt: true, action: handleAddTerminal },
+    { key: 'w', ctrl: true, action: handleCloseCurrentItem },
+    { key: 'F2', action: handleRenameTerminal },
+    { key: '?', ctrl: true, shift: true, action: () => setShowHotkeyHelp(true) },
+  ], [cycleTerminal, handleCloseCurrentItem, handleRenameTerminal]);
+
+  useKeyboardShortcuts(shortcuts);
+
   const handleFileClick = (filePath: string, fileName: string) => {
     // Check if file is already open in the current terminal
     const activeTerminal = state.terminals.find(t => t.id === state.activeTerminalId);
@@ -134,12 +177,20 @@ function AppContent() {
             <LeftPane
               onAddTerminal={handleAddTerminal}
               onCloseTerminal={handleCloseTerminal}
+              renamingTerminalId={renamingTerminalId}
+              onRenameComplete={(id, newLabel) => {
+                if (newLabel) {
+                  dispatch({ type: 'RENAME_TERMINAL', payload: { id, label: newLabel } });
+                }
+                setRenamingTerminalId(null);
+              }}
             />
           }
           centerPane={<CenterPane />}
           rightPane={<RightPane onFileClick={handleFileClick} />}
         />
       </div>
+      <HotkeyHelp isOpen={showHotkeyHelp} onClose={() => setShowHotkeyHelp(false)} />
     </div>
   );
 }
