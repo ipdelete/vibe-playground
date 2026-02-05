@@ -76,8 +76,8 @@ export function TerminalView({ terminalId, cwd, isActive }: TerminalViewProps) {
       window.electronAPI.terminal.resize(terminalId, term.cols, term.rows);
     }, 50);
 
-    // Handle terminal input
-    term.onData((data) => {
+    // Handle terminal input - store disposable for cleanup
+    const onDataDisposable = term.onData((data) => {
       window.electronAPI.terminal.write(terminalId, data);
     });
 
@@ -146,9 +146,18 @@ export function TerminalView({ terminalId, cwd, isActive }: TerminalViewProps) {
       cleanupOnData();
       cleanupOnExit();
       
+      // Dispose xterm event listeners
+      onDataDisposable.dispose();
+      
       resizeObserver.disconnect();
       if (resizeTimeoutRef.current) {
         clearTimeout(resizeTimeoutRef.current);
+      }
+      
+      // Dispose FitAddon explicitly before terminal
+      if (fitAddonRef.current) {
+        fitAddonRef.current.dispose();
+        fitAddonRef.current = null;
       }
       
       // Dispose xterm terminal

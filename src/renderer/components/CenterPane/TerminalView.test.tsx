@@ -7,7 +7,7 @@ jest.mock('@xterm/xterm', () => ({
   Terminal: jest.fn().mockImplementation(() => ({
     loadAddon: jest.fn(),
     open: jest.fn(),
-    onData: jest.fn(),
+    onData: jest.fn().mockReturnValue({ dispose: jest.fn() }), // Returns IDisposable
     attachCustomKeyEventHandler: jest.fn(),
     write: jest.fn(),
     focus: jest.fn(),
@@ -22,6 +22,7 @@ jest.mock('@xterm/xterm', () => ({
 jest.mock('@xterm/addon-fit', () => ({
   FitAddon: jest.fn().mockImplementation(() => ({
     fit: jest.fn(),
+    dispose: jest.fn(), // Add dispose method
   })),
 }));
 
