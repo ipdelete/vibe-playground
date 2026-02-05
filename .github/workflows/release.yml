@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      force_release:
+        description: 'Force release even for patch versions'
+        required: false
+        default: 'true'
+        type: boolean
 
 concurrency:
   group: release
@@ -51,6 +58,10 @@ jobs:
 
             if [ "$CURRENT_MAJOR_MINOR" != "$PREVIOUS_MAJOR_MINOR" ]; then
               echo "Major or minor version changed - triggering release"
+              echo "should_release=true" >> $GITHUB_OUTPUT
+              echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+            elif [ "${{ github.event.inputs.force_release }}" == "true" ]; then
+              echo "Manual trigger with force_release - triggering release"
               echo "should_release=true" >> $GITHUB_OUTPUT
               echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
             else
