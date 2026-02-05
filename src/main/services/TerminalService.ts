@@ -1,5 +1,5 @@
 // TerminalService using node-pty for proper PTY support
-import * as pty from 'node-pty';
+import * as pty from '@homebridge/node-pty-prebuilt-multiarch';
 import * as os from 'os';
 
 interface TerminalInstance {

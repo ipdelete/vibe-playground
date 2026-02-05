@@ -4,35 +4,6 @@ A modern Electron-based terminal manager for working across multiple repositorie
 
 ![Terminal View](img/terminal-screenshot.png)
 
-## ⚠️ Windows Prerequisites
-
-This project uses `node-pty` for full terminal support, which requires native compilation. **Before installing**, you must have:
-
-### 1. Visual Studio Build Tools
-Install Visual Studio 2022 (Community, Professional, or Enterprise) or Build Tools with the **"Desktop development with C++"** workload.
-
-### 2. Spectre-mitigated Libraries (Required for node-pty)
-
-**Option A: Via Visual Studio Installer (GUI)**
-1. Open **Visual Studio Installer**
-2. Click **Modify** on your VS 2022 installation
-3. Go to **Individual components** tab
-4. Search for "Spectre"
-5. Check **"MSVC v143 - VS 2022 C++ x64/x86 Spectre-mitigated libs (Latest)"**
-6. Click **Modify** to install
-
-**Option B: Via Command Line**
-```powershell
-# Find your VS installation path first, then run:
-& "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify `
-    --installPath "C:\Program Files\Microsoft Visual Studio\2022\Enterprise" `
-    --add Microsoft.VisualStudio.Component.VC.14.38.17.8.x86.x64.Spectre `
-    --quiet
-```
-> Adjust the `--installPath` to match your VS installation (Community, Professional, or Enterprise)
-
----
-
 ## Features
 
 ### 🖥️ Multi-Terminal Management
@@ -63,7 +34,6 @@ Install Visual Studio 2022 (Community, Professional, or Enterprise) or Build Too
 ### Prerequisites
 - Node.js 18+ 
 - npm 9+
-- Windows: See [Windows Prerequisites](#️-windows-prerequisites) above
 
 ### Setup
 

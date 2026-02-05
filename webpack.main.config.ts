@@ -19,6 +19,6 @@ export const mainConfig: Configuration = {
   },
   // Don't bundle node-pty - it has native modules that need to be loaded at runtime
   externals: {
-    'node-pty': 'commonjs node-pty',
+    '@homebridge/node-pty-prebuilt-multiarch': 'commonjs @homebridge/node-pty-prebuilt-multiarch',
   },
 };

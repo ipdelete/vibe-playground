@@ -27,7 +27,7 @@ const config: ForgeConfig = {
   plugins: [
     new AutoUnpackNativesPlugin({}),
     new ForgeExternalsPlugin({
-      externals: ['node-pty'],
+      externals: ['@homebridge/node-pty-prebuilt-multiarch'],
       includeDeps: true,
     }),
     new WebpackPlugin({
