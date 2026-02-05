@@ -161,15 +161,24 @@ body {
   border-left-color: var(--accent);
 }
 
-.terminal-icon {
-  color: var(--text-muted);
+.terminal-icon-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
-.terminal-item.active .terminal-icon {
+.terminal-item.active .terminal-icon-wrapper {
   color: var(--accent);
+}
+
+.worktree-badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  color: var(--accent);
+  line-height: 1;
 }
 
 .terminal-label {

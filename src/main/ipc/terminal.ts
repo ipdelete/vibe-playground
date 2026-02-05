@@ -10,6 +10,9 @@ export function setupTerminalIPC(mainWindow: BrowserWindow): void {
   ipcMain.handle('terminal:create', (_event, id: string, cwd: string) => {
     terminalService.create(id, cwd);
     
+    // Detect if this is a git worktree
+    const isWorktree = terminalService.isGitWorktree(cwd);
+    
     // Register cwd as allowed root for file access
     fileService.addAllowedRoot(cwd);
     
@@ -29,7 +32,7 @@ export function setupTerminalIPC(mainWindow: BrowserWindow): void {
       });
     }
 
-    return id;
+    return { id, isWorktree };
   });
 
   // Write to terminal

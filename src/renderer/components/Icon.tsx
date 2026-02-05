@@ -30,6 +30,7 @@ export type IconName =
   | 'java'
   | 'database'
   | 'git-commit'
+  | 'git-branch'
   | 'source-control'
   | 'package'
   | 'lock'

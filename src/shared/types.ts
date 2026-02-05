@@ -3,6 +3,7 @@ export interface Terminal {
   label: string;
   cwd: string;
   openFiles: OpenFile[];
+  isWorktree?: boolean;
 }
 
 export interface OpenFile {
@@ -32,7 +33,7 @@ export interface SessionData {
 }
 
 export type AppAction =
-  | { type: 'ADD_TERMINAL'; payload: { id: string; label: string; cwd: string } }
+  | { type: 'ADD_TERMINAL'; payload: { id: string; label: string; cwd: string; isWorktree?: boolean } }
   | { type: 'REMOVE_TERMINAL'; payload: { id: string } }
   | { type: 'SET_ACTIVE_TERMINAL'; payload: { id: string } }
   | { type: 'SET_ACTIVE_ITEM'; payload: { id: string; terminalId?: string } }

@@ -1,4 +1,5 @@
 import * as os from 'os';
+import * as child_process from 'child_process';
 
 // Mock node-pty
 const mockPtyProcess = {
@@ -14,6 +15,13 @@ const mockSpawn = jest.fn(() => ({ ...mockPtyProcess }));
 jest.mock('@homebridge/node-pty-prebuilt-multiarch', () => ({
   spawn: mockSpawn,
 }));
+
+// Mock child_process.execSync for worktree detection
+jest.mock('child_process', () => ({
+  execSync: jest.fn(),
+}));
+
+const mockExecSync = child_process.execSync as jest.MockedFunction<typeof child_process.execSync>;
 
 // Import after mocking
 import { terminalService } from './TerminalService';
@@ -109,6 +117,53 @@ describe('TerminalService', () => {
 
       expect(ids).toContain('term-a');
       expect(ids).toContain('term-b');
+    });
+  });
+
+  describe('isGitWorktree', () => {
+    beforeEach(() => {
+      mockExecSync.mockReset();
+    });
+
+    it('should return true when git-dir and git-common-dir differ (worktree)', () => {
+      mockExecSync
+        .mockReturnValueOnce('.git/worktrees/feature-branch\n')  // git-dir
+        .mockReturnValueOnce('/repo/.git\n');                     // git-common-dir
+
+      const result = terminalService.isGitWorktree('/repo/worktrees/feature-branch');
+
+      expect(result).toBe(true);
+      expect(mockExecSync).toHaveBeenCalledTimes(2);
+    });
+
+    it('should return false when git-dir and git-common-dir are the same (regular repo)', () => {
+      mockExecSync
+        .mockReturnValueOnce('.git\n')  // git-dir
+        .mockReturnValueOnce('.git\n'); // git-common-dir
+
+      const result = terminalService.isGitWorktree('/repo');
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false for non-git directories', () => {
+      mockExecSync.mockImplementation(() => {
+        throw new Error('fatal: not a git repository');
+      });
+
+      const result = terminalService.isGitWorktree('/not-a-repo');
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false when git is not available', () => {
+      mockExecSync.mockImplementation(() => {
+        throw new Error('git: command not found');
+      });
+
+      const result = terminalService.isGitWorktree('/some/path');
+
+      expect(result).toBe(false);
     });
   });
 });

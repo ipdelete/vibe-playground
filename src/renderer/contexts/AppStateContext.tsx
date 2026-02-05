@@ -16,6 +16,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         label: action.payload.label,
         cwd: action.payload.cwd,
         openFiles: [],
+        isWorktree: action.payload.isWorktree,
       };
       return {
         ...state,

@@ -277,6 +277,54 @@ describe('LeftPane', () => {
     });
   });
 
+  describe('worktree indicator', () => {
+    it('should show worktree badge when terminal is in a worktree', () => {
+      const state: AppState = {
+        terminals: [
+          { id: 'term-1', label: 'feature-branch', cwd: '/home/worktree', openFiles: [], isWorktree: true },
+        ],
+        activeItemId: 'term-1',
+        activeTerminalId: 'term-1',
+      };
+
+      renderWithProvider(<LeftPane onAddTerminal={() => {}} onCloseTerminal={() => {}} />, state);
+      
+      const badge = document.querySelector('.worktree-badge');
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveAttribute('title', 'Git worktree');
+    });
+
+    it('should not show worktree badge for regular terminals', () => {
+      const state: AppState = {
+        terminals: [
+          { id: 'term-1', label: 'Terminal 1', cwd: '/home', openFiles: [], isWorktree: false },
+        ],
+        activeItemId: 'term-1',
+        activeTerminalId: 'term-1',
+      };
+
+      renderWithProvider(<LeftPane onAddTerminal={() => {}} onCloseTerminal={() => {}} />, state);
+      
+      const badge = document.querySelector('.worktree-badge');
+      expect(badge).not.toBeInTheDocument();
+    });
+
+    it('should not show worktree badge when isWorktree is undefined', () => {
+      const state: AppState = {
+        terminals: [
+          { id: 'term-1', label: 'Terminal 1', cwd: '/home', openFiles: [] },
+        ],
+        activeItemId: 'term-1',
+        activeTerminalId: 'term-1',
+      };
+
+      renderWithProvider(<LeftPane onAddTerminal={() => {}} onCloseTerminal={() => {}} />, state);
+      
+      const badge = document.querySelector('.worktree-badge');
+      expect(badge).not.toBeInTheDocument();
+    });
+  });
+
   describe('terminal selection', () => {
     it('should dispatch SET_ACTIVE_TERMINAL when terminal is clicked', () => {
       const state: AppState = {

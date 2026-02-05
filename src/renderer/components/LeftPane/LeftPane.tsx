@@ -133,8 +133,13 @@ export function LeftPane({ onAddTerminal, onCloseTerminal, renamingTerminalId, o
                   onClick={() => handleTerminalClick(terminal.id)}
                   onContextMenu={(e) => handleTerminalContextMenu(e, terminal.id)}
                 >
-                  <span className="terminal-icon">
+                  <span className="terminal-icon-wrapper">
                     <Icon name="terminal" size="sm" />
+                    {terminal.isWorktree && (
+                      <span className="worktree-badge" title="Git worktree">
+                        <Icon name="git-branch" size={10} />
+                      </span>
+                    )}
                   </span>
                   {renamingTerminalId === terminal.id ? (
                     <input

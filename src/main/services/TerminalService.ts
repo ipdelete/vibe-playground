@@ -1,6 +1,7 @@
 // TerminalService using node-pty for proper PTY support
 import * as pty from '@homebridge/node-pty-prebuilt-multiarch';
 import * as os from 'os';
+import { execSync } from 'child_process';
 
 interface TerminalInstance {
   id: string;
@@ -16,6 +17,22 @@ class TerminalService {
       return 'powershell.exe';
     }
     return process.env.SHELL || '/bin/bash';
+  }
+
+  /**
+   * Detect if a directory is a git worktree.
+   * Compares git-dir vs git-common-dir - if they differ, it's a worktree.
+   */
+  isGitWorktree(cwd: string): boolean {
+    try {
+      const gitDir = execSync('git rev-parse --git-dir', { cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+      const gitCommonDir = execSync('git rev-parse --git-common-dir', { cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+      // In a worktree, git-dir points to .git/worktrees/<name>, while git-common-dir points to the main .git
+      return gitDir !== gitCommonDir;
+    } catch {
+      // Not a git repo or git not available
+      return false;
+    }
   }
 
   create(id: string, cwd: string): string {

@@ -25,13 +25,18 @@ function AppContent() {
         if (sessionData && sessionData.terminals.length > 0) {
           // Restore each terminal
           for (const terminal of sessionData.terminals) {
-            // Create the PTY process
-            await window.electronAPI.terminal.create(terminal.id, terminal.cwd);
+            // Create the PTY process and get worktree status
+            const result = await window.electronAPI.terminal.create(terminal.id, terminal.cwd);
             
             // Dispatch to add terminal to state
             dispatch({
               type: 'ADD_TERMINAL',
-              payload: { id: terminal.id, label: terminal.label, cwd: terminal.cwd },
+              payload: { 
+                id: terminal.id, 
+                label: terminal.label, 
+                cwd: terminal.cwd,
+                isWorktree: result.isWorktree,
+              },
             });
 
             // Restore open files for this terminal
@@ -83,9 +88,11 @@ function AppContent() {
       const label = directory.split(/[/\\]/).pop() || 'Terminal';
       // Register allowed root BEFORE adding terminal so FileTree can access it
       await window.electronAPI.fs.addAllowedRoot(directory);
+      // Create terminal and get worktree status
+      const result = await window.electronAPI.terminal.create(id, directory);
       dispatch({
         type: 'ADD_TERMINAL',
-        payload: { id, label, cwd: directory },
+        payload: { id, label, cwd: directory, isWorktree: result.isWorktree },
       });
     }
   };
