@@ -23,6 +23,36 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Title bar / Window chrome */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.title-bar {
+  height: 32px;
+  background-color: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  padding-left: var(--space-3);
+  -webkit-app-region: drag;
+  flex-shrink: 0;
+}
+
+.title-bar-text {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  -webkit-app-region: drag;
+}
+
+.app-content {
+  flex: 1;
+  overflow: hidden;
+}
+
 /* Layout */
 .three-pane-layout {
   display: flex;
