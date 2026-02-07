@@ -50,7 +50,7 @@ export function ChatView() {
         }
       })
       .catch(() => { /* models unavailable — picker will be hidden */ });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line
 
   // Close picker on outside click
   useEffect(() => {
