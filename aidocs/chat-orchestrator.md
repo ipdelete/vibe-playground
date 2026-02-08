@@ -12,15 +12,14 @@ Open Copilot Chat from the left pane and describe what you want:
 > Create an agent for ~/src/giant-computer/pallet and fix the broken auth middleware
 
 ### 2. Agent Appears
-Chat calls `create_agent` behind the scenes. A new agent named "pallet" appears in the left pane with:
+Chat calls `vp_create_agent` behind the scenes. A new agent named "pallet" appears in the left pane with:
 - A **copilot icon** (distinguishing it from manual terminal agents)
 - A **status dot** — green (idle), yellow pulsing (working), red (error)
 
 ### 3. Watch the Activity Feed
 Click the agent in the left pane. The center pane shows a **card-based activity feed** instead of a terminal:
-- **Tool start cards** — "Reading file", "Editing file", "Running command" with a spinner
-- **Tool complete cards** — collapsible results, green for success, red for failure
-- **Assistant message cards** — the agent's reasoning
+- **Tool cards** — merged start/complete: spinner while running, green ✓ on success, red ✗ on failure. Click to expand results.
+- **Assistant message cards** — the agent's reasoning (accumulated from streaming deltas)
 - **Error cards** — red alerts
 - **Done card** — green confirmation when the session goes idle
 
@@ -28,7 +27,7 @@ Click the agent in the left pane. The center pane shows a **card-based activity 
 Back in chat:
 > Now run the tests and fix anything that breaks
 
-Chat calls `send_to_agent` and the activity feed lights up again.
+Chat calls `vp_send_to_agent` and the activity feed lights up again.
 
 ### 5. Multiple Agents
 > Create an agent for ~/src/giant-computer/api and update the endpoints
@@ -38,7 +37,7 @@ A second agent appears. Click between them to see each feed. The file tree on th
 ### 6. Check Status
 > List my agents
 
-Chat calls `list_agents` and reports all agents with their current state.
+Chat calls `vp_list_agents` and reports all agents with their current state.
 
 ---
 
@@ -94,13 +93,13 @@ The `@github/copilot-sdk` communicates with Copilot CLI via JSON-RPC. A single `
 ### Chat → Agent Tool Flow
 1. User sends a message in ChatView
 2. `CopilotService.sendMessage()` forwards it to the SDK session
-3. The SDK session has 3 custom tools registered (`create_agent`, `send_to_agent`, `list_agents`)
-4. When the LLM decides to call `create_agent({path: "~/src/pallet"})`:
+3. The SDK session has 3 custom tools registered (`vp_create_agent`, `vp_send_to_agent`, `vp_list_agents`) — prefixed with `vp_` to avoid collisions with CLI built-in tools
+4. When the LLM decides to call `vp_create_agent({path: "~/src/pallet"})`:
    - `OrchestratorTools` validates the path exists
    - `AgentSessionService.createSession()` creates a new SDK session with `workingDirectory` set to the repo
    - The `orchestrator:agent-created` IPC event fires
    - Renderer adds the agent to state with `hasSession: true`
-5. When the LLM calls `send_to_agent({agentId, prompt})`:
+5. When the LLM calls `vp_send_to_agent({agentId, prompt})`:
    - `AgentSessionService.sendPrompt()` sends the prompt to the agent's session
    - The agent's SDK session starts making tool calls (edit, bash, etc.)
    - Each tool call fires SDK events → `AgentSessionService` maps them to `AgentEvent` types → IPC `agent-session:event` → renderer dispatches to `agentEvents` state
@@ -137,7 +136,7 @@ activeItem is file                     → FileView
 ```
 
 ### Permission Handling
-The SDK's `onPermissionRequest` callback forwards requests from the agent session to the renderer via IPC. The renderer can show approval UI in the activity feed and send the decision back. Currently auto-approves (Phase 5 will add the UI).
+Agent sessions auto-approve all permission requests (`read`, `write`, `shell`, etc.) via the `onPermissionRequest` callback in `AgentSessionService`. Chat sessions also auto-approve via `CopilotService`. A UI-based approval flow may be added in the future.
 
 ## Key Files
 
@@ -145,8 +144,8 @@ The SDK's `onPermissionRequest` callback forwards requests from the agent sessio
 |------|---------|
 | `src/main/services/SdkLoader.ts` | Singleton CopilotClient, ESM import workaround |
 | `src/main/services/CopilotService.ts` | Chat session management, tool registration |
-| `src/main/services/OrchestratorTools.ts` | `create_agent`, `send_to_agent`, `list_agents` tool definitions |
-| `src/main/services/AgentSessionService.ts` | Per-agent SDK sessions, event mapping, permission forwarding |
+| `src/main/services/OrchestratorTools.ts` | `vp_create_agent`, `vp_send_to_agent`, `vp_list_agents` tool definitions |
+| `src/main/services/AgentSessionService.ts` | Per-agent SDK sessions, event mapping, auto-approve permissions |
 | `src/main/ipc/copilot.ts` | Chat IPC + lazy tool initialization |
 | `src/main/ipc/agent-session.ts` | Agent session IPC (create/send/stop/destroy/events) |
 | `src/shared/types.ts` | `AgentEvent` union type (12 variants), `Agent.hasSession/status` |
