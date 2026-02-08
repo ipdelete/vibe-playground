@@ -991,6 +991,7 @@ kbd {
   border: 1px solid var(--border-subtle);
   border-left: 3px solid var(--accent);
   overflow: hidden;
+  flex-shrink: 0;
   transition: border-color var(--transition-base);
 }
 
