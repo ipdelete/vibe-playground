@@ -27,8 +27,8 @@ const managedAgents = new Map<string, { label: string; cwd: string }>();
 export async function createOrchestratorTools(): Promise<ToolType[]> {
   const { defineTool } = await loadSdk();
 
-  const createAgent = defineTool('create_agent', {
-    description: 'Create a new coding agent scoped to a local repository folder. The agent gets its own Copilot session and appears in the left pane. Returns the agent ID for use with send_to_agent.',
+  const createAgent = defineTool('vp_create_agent', {
+    description: 'Create a new coding agent scoped to a local repository folder. The agent gets its own Copilot session and appears in the left pane. Returns the agent ID for use with vp_send_to_agent.',
     parameters: {
       type: 'object',
       properties: {
@@ -73,12 +73,12 @@ export async function createOrchestratorTools(): Promise<ToolType[]> {
         agentId,
         label,
         cwd: resolvedPath,
-        message: `Agent "${label}" created and ready. Use send_to_agent to give it tasks.`,
+        message: `Agent "${label}" created and ready. Use vp_send_to_agent to give it tasks.`,
       };
     },
   });
 
-  const sendToAgent = defineTool('send_to_agent', {
+  const sendToAgent = defineTool('vp_send_to_agent', {
     description: 'Send a task or prompt to an existing coding agent. The agent will execute the task in its scoped repository using Copilot.',
     parameters: {
       type: 'object',
@@ -96,7 +96,7 @@ export async function createOrchestratorTools(): Promise<ToolType[]> {
     },
     handler: async (args: { agentId: string; prompt: string }) => {
       if (!agentSessionService.hasSession(args.agentId)) {
-        return { error: `No active session for agent ${args.agentId}. Create one first with create_agent.` };
+        return { error: `No active session for agent ${args.agentId}. Create one first with vp_create_agent.` };
       }
 
       try {
@@ -112,7 +112,7 @@ export async function createOrchestratorTools(): Promise<ToolType[]> {
     },
   });
 
-  const listAgents = defineTool('list_agents', {
+  const listAgents = defineTool('vp_list_agents', {
     description: 'List all active coding agents and their status.',
     parameters: {
       type: 'object',
@@ -130,7 +130,7 @@ export async function createOrchestratorTools(): Promise<ToolType[]> {
       }
       return agents.length > 0
         ? { agents }
-        : { message: 'No agents are currently active. Use create_agent to create one.' };
+        : { message: 'No agents are currently active. Use vp_create_agent to create one.' };
     },
   });
 
@@ -149,9 +149,9 @@ function resolvePath(inputPath: string): string {
 export const ORCHESTRATOR_SYSTEM_MESSAGE = `You are also the Vibe Playground orchestrator. In addition to normal chat, you can manage coding agents that work on local repositories.
 
 Available tools:
-- **create_agent**: Create a coding agent scoped to a local repo folder. Returns an agent ID.
-- **send_to_agent**: Send a task to an existing agent by ID. The agent executes it autonomously.
-- **list_agents**: List all active agents and their status.
+- **vp_create_agent**: Create a coding agent scoped to a local repo folder. Returns an agent ID.
+- **vp_send_to_agent**: Send a task to an existing agent by ID. The agent executes it autonomously.
+- **vp_list_agents**: List all active agents and their status.
 
 Only use these tools when the user asks you to work on a project or manage agents. For general questions, respond normally.
 

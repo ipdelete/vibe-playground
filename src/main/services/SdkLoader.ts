@@ -1,6 +1,10 @@
 // Shared SDK loader — singleton CopilotClient for use by CopilotService and AgentSessionService.
 // Uses dynamic import workaround for ESM-only @github/copilot-sdk in CJS Electron main process.
 
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+
 type CopilotClientType = import('@github/copilot-sdk').CopilotClient;
 
 let sdkModule: typeof import('@github/copilot-sdk') | null = null;
@@ -23,7 +27,12 @@ export async function getSharedClient(): Promise<CopilotClientType> {
 
   startPromise = (async () => {
     const { CopilotClient } = await loadSdk();
-    clientInstance = new CopilotClient();
+    const logDir = path.join(os.homedir(), '.copilot', 'logs');
+    fs.mkdirSync(logDir, { recursive: true });
+    clientInstance = new CopilotClient({
+      logLevel: 'all',
+      cliArgs: ['--log-dir', logDir],
+    });
     await clientInstance.start();
     return clientInstance;
   })();

@@ -1,8 +1,22 @@
 // Uses shared SDK loader for ESM-only @github/copilot-sdk in CJS Electron main process
+import { app } from 'electron';
+import * as fs from 'fs';
+import * as path from 'path';
 import { getSharedClient, loadSdk } from './SdkLoader';
 
 type CopilotSessionType = import('@github/copilot-sdk').CopilotSession;
 type ToolType = import('@github/copilot-sdk').Tool;
+
+let logFilePath: string | null = null;
+
+function logToFile(message: string): void {
+  const filePath = logFilePath ?? (logFilePath = path.join(app.getPath('userData'), 'copilot-chat.log'));
+  fs.appendFile(filePath, `${new Date().toISOString()} ${message}\n`, (err) => {
+    if (err) {
+      console.error('[CopilotService] Failed to write log file:', err);
+    }
+  });
+}
 
 export class CopilotService {
   private sessions: Map<string, CopilotSessionType> = new Map();
@@ -46,11 +60,13 @@ export class CopilotService {
       // Auto-approve permissions so CLI tools (bash, read, edit) don't block
       config.onPermissionRequest = async (request: { kind: string }) => {
         console.log(`[CopilotService] Permission auto-approved: ${request.kind}`);
+        logToFile(`Permission auto-approved: ${request.kind}`);
         return { kind: 'approved' };
       };
       // Handle user input requests so ask_user doesn't throw
       config.onUserInputRequest = async (request: { question: string }) => {
         console.log(`[CopilotService] User input requested: ${request.question}`);
+        logToFile(`User input requested: ${request.question}`);
         return { answer: 'Not available in this context', wasFreeform: true };
       };
       session = await client.createSession(config as Parameters<typeof client.createSession>[0]);
@@ -91,7 +107,9 @@ export class CopilotService {
       // Log all events for debugging
       const unsubDebug = session.on((event) => {
         if (event.type === 'assistant.message_delta') return; // too noisy
-        console.log(`[CopilotService] Event: ${event.type}`, JSON.stringify(event.data ?? {}).slice(0, 200));
+        const payload = JSON.stringify(event.data ?? {}).slice(0, 200);
+        console.log(`[CopilotService] Event: ${event.type}`, payload);
+        logToFile(`Event: ${event.type} ${payload}`);
       });
 
       // Stream deltas as they arrive
@@ -103,8 +121,10 @@ export class CopilotService {
 
       // sendAndWait blocks until the full response is ready
       console.log(`[CopilotService] Sending prompt to session ${conversationId}`);
+      logToFile(`Sending prompt to session ${conversationId}`);
       const response = await session.sendAndWait({ prompt });
       console.log(`[CopilotService] sendAndWait resolved for ${conversationId}`);
+      logToFile(`sendAndWait resolved for ${conversationId}`);
 
       unsubDelta();
       unsubDebug();
@@ -120,6 +140,7 @@ export class CopilotService {
     } catch (err) {
       if (abortController.signal.aborted) return;
       const message = err instanceof Error ? err.message : String(err);
+      logToFile(`Error: ${message}`);
       onError(messageId, message);
     } finally {
       this.activeAbortControllers.delete(conversationId);
