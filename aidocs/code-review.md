@@ -12,7 +12,7 @@ The codebase is generally well-structured with clear separation between main pro
 
 | Severity | Count | Resolved |
 |----------|-------|----------|
-| High     | 7     | 4        |
+| High     | 7     | 5        |
 | Medium   | 15    | 2        |
 | Low      | 10    | 3        |
 
@@ -54,18 +54,20 @@ The codebase is generally well-structured with clear separation between main pro
 
 ---
 
-### H3. ChatView is a God Component
+### H3. ~~ChatView is a God Component~~ ✅ RESOLVED
 
-`src/renderer/components/CenterPane/ChatView.tsx` (260 lines) handles:
-- Input state management
-- Model selection with picker UI
-- Chat message streaming via IPC
-- Conversation CRUD
-- localStorage persistence
-- Auto-scroll behavior
-- An `eslint-disable-line` suppressing a dependency array warning (line 53)
+**Resolved in v0.10.8** — Extracted 4 custom hooks from ChatView (260→100 lines): `useChatStreaming` (IPC event subscription), `useModelPicker` (model fetch + picker state), `useChatInput` (input state + send/stop handlers), `useConversationSync` (auto-save on stream complete). Added 31 new unit tests. All 258 tests pass.
 
-**Fix:** Extract custom hooks: `useChatInput`, `useModelPicker`, `useChatStreaming`, `useConversationManager`.
+~~`src/renderer/components/CenterPane/ChatView.tsx` (260 lines) handles:~~
+~~- Input state management~~
+~~- Model selection with picker UI~~
+~~- Chat message streaming via IPC~~
+~~- Conversation CRUD~~
+~~- localStorage persistence~~
+~~- Auto-scroll behavior~~
+~~- An `eslint-disable-line` suppressing a dependency array warning (line 53)~~
+
+~~**Fix:** Extract custom hooks: `useChatInput`, `useModelPicker`, `useChatStreaming`, `useConversationManager`.~~
 
 ---
 
@@ -327,7 +329,7 @@ Several test files have unused imports:
 | 1 | ~~Delete duplicate type definitions (H1)~~ | ✅ Done (c67a116) |
 | 2 | ~~Delete unused methods and imports (M1, M2, H6, H7, L3-L5)~~ | ✅ Done (v0.10.5) |
 | 3 | ~~Break up AppStateContext reducer (H2)~~ | ✅ Done (v0.10.6) |
-| 4 | Extract ChatView into hooks (H3) | Largest component becomes testable |
+| 4 | ~~Extract ChatView into hooks (H3)~~ | ✅ Done (v0.10.8) |
 | 5 | Extract preload.ts listener helper (M3) | ~60 lines of repetition eliminated |
 | 6 | Break up CopilotService.sendMessage (H4) | Core service becomes testable |
 | 7 | Extract renderer custom hooks (M7, M9, M10) | Cleaner component boundaries |

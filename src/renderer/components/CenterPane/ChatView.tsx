@@ -1,189 +1,31 @@
 import * as React from 'react';
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect } from 'react';
 import { useAppState } from '../../contexts/AppStateContext';
+import { useChatStreaming } from '../../hooks/useChatStreaming';
+import { useModelPicker } from '../../hooks/useModelPicker';
+import { useChatInput } from '../../hooks/useChatInput';
+import { useConversationSync } from '../../hooks/useConversationSync';
 import { Icon } from '../Icon';
-
-function generateTitle(content: string): string {
-  const firstLine = content.split('\n')[0].trim();
-  if (firstLine.length <= 50) return firstLine;
-  return firstLine.substring(0, 50) + '…';
-}
 
 export function ChatView() {
   const { state, dispatch } = useAppState();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [inputValue, setInputValue] = useState('');
-  const conversationIdRef = useRef<string | null>(state.activeConversationId);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const pickerRef = useRef<HTMLDivElement>(null);
 
-  // Keep ref in sync with state
-  useEffect(() => {
-    conversationIdRef.current = state.activeConversationId;
-  }, [state.activeConversationId]);
+  useChatStreaming(dispatch);
+  useConversationSync(state);
 
+  const { pickerOpen, setPickerOpen, pickerRef, selectedModelName } = useModelPicker(
+    state.availableModels, state.selectedModel, state.chatLoading, dispatch,
+  );
+
+  const { inputValue, setInputValue, inputRef, handleSend, handleStop, handleKeyDown } = useChatInput(
+    state, dispatch,
+  );
+
+  // Auto-scroll on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView?.({ behavior: 'smooth' });
   }, [state.chatMessages]);
-
-  // Refocus input when response completes
-  useEffect(() => {
-    if (!state.chatLoading) {
-      inputRef.current?.focus();
-    }
-  }, [state.chatLoading]);
-
-  // Fetch available models on mount
-  useEffect(() => {
-    if (state.availableModels.length > 0) return;
-    window.electronAPI.copilot.listModels()
-      .then(models => {
-        dispatch({ type: 'SET_AVAILABLE_MODELS', payload: { models } });
-        // Default to last-used model from localStorage, or first model
-        if (!state.selectedModel) {
-          const lastUsed = localStorage.getItem('lastUsedModel');
-          const defaultModel = lastUsed && models.some(m => m.id === lastUsed)
-            ? lastUsed
-            : models[0]?.id ?? null;
-          dispatch({ type: 'SET_SELECTED_MODEL', payload: { model: defaultModel } });
-        }
-      })
-      .catch(() => { /* models unavailable — picker will be hidden */ });
-  }, []); // eslint-disable-line
-
-  // Close picker on outside click
-  useEffect(() => {
-    if (!pickerOpen) return;
-    const handleClick = (e: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
-        setPickerOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [pickerOpen]);
-
-  // Save conversation to disk after streaming completes
-  const saveConversation = useCallback((messages: typeof state.chatMessages) => {
-    const convId = conversationIdRef.current;
-    if (!convId) return;
-    const conv = state.conversations.find(c => c.id === convId);
-    if (!conv) return;
-
-    window.electronAPI.conversation.save({
-      id: convId,
-      title: conv.title,
-      model: state.selectedModel ?? undefined,
-      messages,
-      createdAt: conv.createdAt,
-      updatedAt: Date.now(),
-    });
-  }, [state.conversations, state.selectedModel]);
-
-  // Listen for streaming chunks from main process
-  useEffect(() => {
-    const cleanupChunk = window.electronAPI.copilot.onChunk((messageId, content) => {
-      dispatch({ type: 'APPEND_CHAT_CHUNK', payload: { messageId, content } });
-    });
-
-    const cleanupDone = window.electronAPI.copilot.onDone(() => {
-      dispatch({ type: 'SET_CHAT_LOADING', payload: { loading: false } });
-    });
-
-    const cleanupError = window.electronAPI.copilot.onError((messageId, error) => {
-      dispatch({ type: 'APPEND_CHAT_CHUNK', payload: { messageId, content: `Error: ${error}` } });
-      dispatch({ type: 'SET_CHAT_LOADING', payload: { loading: false } });
-    });
-
-    return () => {
-      cleanupChunk();
-      cleanupDone();
-      cleanupError();
-    };
-  }, [dispatch]);
-
-  // Save conversation when loading finishes (streaming done/error)
-  const prevLoadingRef = useRef(state.chatLoading);
-  useEffect(() => {
-    if (prevLoadingRef.current && !state.chatLoading) {
-      saveConversation(state.chatMessages);
-    }
-    prevLoadingRef.current = state.chatLoading;
-  }, [state.chatLoading, state.chatMessages, saveConversation]);
-
-  const handleSend = () => {
-    const content = inputValue.trim();
-    if (!content || state.chatLoading) return;
-
-    let convId = state.activeConversationId;
-
-    // Create a new conversation if none is active
-    if (!convId) {
-      convId = `conv-${Date.now()}`;
-      const now = Date.now();
-      const title = generateTitle(content);
-      dispatch({
-        type: 'ADD_CONVERSATION',
-        payload: {
-          conversation: { id: convId, title, createdAt: now, updatedAt: now },
-        },
-      });
-    }
-
-    const userMessage = {
-      id: `msg-${Date.now()}`,
-      role: 'user' as const,
-      content,
-      timestamp: Date.now(),
-    };
-
-    dispatch({ type: 'ADD_CHAT_MESSAGE', payload: { message: userMessage } });
-    setInputValue('');
-
-    // Create placeholder assistant message for streaming
-    const assistantMessage = {
-      id: `msg-${Date.now() + 1}`,
-      role: 'assistant' as const,
-      content: '',
-      timestamp: Date.now(),
-    };
-
-    dispatch({ type: 'ADD_CHAT_MESSAGE', payload: { message: assistantMessage } });
-    dispatch({ type: 'SET_CHAT_LOADING', payload: { loading: true } });
-
-    // Remember last-used model
-    if (state.selectedModel) {
-      localStorage.setItem('lastUsedModel', state.selectedModel);
-    }
-
-    // Send to main process via IPC
-    window.electronAPI.copilot.send(convId, content, assistantMessage.id, state.selectedModel ?? undefined);
-  };
-
-  const handleStop = () => {
-    if (!state.chatLoading) return;
-    const convId = conversationIdRef.current;
-    if (!convId) return;
-    // Find the last assistant message (the one being streamed)
-    const lastAssistant = [...state.chatMessages].reverse().find(m => m.role === 'assistant');
-    if (lastAssistant) {
-      window.electronAPI.copilot.stop(convId, lastAssistant.id);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Stop propagation to prevent global shortcuts from firing
-    e.stopPropagation();
-
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  const selectedModelName = state.availableModels.find(m => m.id === state.selectedModel)?.name
-    ?? state.selectedModel ?? 'Model';
 
   return (
     <div className="chat-view">
