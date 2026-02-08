@@ -107,52 +107,21 @@ export class CopilotService {
 
     try {
       const session = await this.getOrCreateSession(conversationId, model);
+      const enrichedPrompt = this.enrichPrompt(prompt);
+      const { unsubscribeAll, hasReceivedChunks } = this.subscribeToEvents(session, abortController, messageId, onChunk);
 
-      // Inject active agent context so the model knows which agents exist
-      let enrichedPrompt = prompt;
-      if (this.agentContextProvider) {
-        const agents = this.agentContextProvider();
-        if (agents.length > 0) {
-          const agentList = agents.map(a => `- ${a.label} (ID: ${a.agentId}, path: ${a.cwd})`).join('\n');
-          enrichedPrompt = `<active_agents>\n${agentList}\n</active_agents>\n\n${prompt}`;
-        }
-      }
-
-      let receivedChunks = false;
-
-      // Log all events for debugging
-      const unsubDebug = session.on((event) => {
-        if (event.type === 'assistant.message_delta') return; // too noisy
-        const payload = JSON.stringify(event.data ?? {}).slice(0, 200);
-        console.log(`[CopilotService] Event: ${event.type}`, payload);
-        logToFile(`Event: ${event.type} ${payload}`);
-      });
-
-      // Stream deltas as they arrive
-      const unsubDelta = session.on('assistant.message_delta', (event) => {
-        if (abortController.signal.aborted) return;
-        receivedChunks = true;
-        onChunk(messageId, event.data.deltaContent);
-      });
-
-      // sendAndWait blocks until the full response is ready
-      // 5 min timeout — orchestrator tool calls (vp_send_to_agent) can take minutes
       console.log(`[CopilotService] Sending prompt to session ${conversationId}`);
       logToFile(`Sending prompt to session ${conversationId}`);
+      // 5 min timeout — orchestrator tool calls (vp_send_to_agent) can take minutes
       const response = await session.sendAndWait({ prompt: enrichedPrompt }, 300_000);
       console.log(`[CopilotService] sendAndWait resolved for ${conversationId}`);
       logToFile(`sendAndWait resolved for ${conversationId}`);
 
-      unsubDelta();
-      unsubDebug();
+      unsubscribeAll();
 
       if (abortController.signal.aborted) return;
 
-      // If no streaming chunks were received, send the full response content
-      if (!receivedChunks && response?.data.content) {
-        onChunk(messageId, response.data.content);
-      }
-
+      this.handleStreamingResponse(response, hasReceivedChunks(), messageId, onChunk);
       onDone(messageId);
     } catch (err) {
       if (abortController.signal.aborted) return;
@@ -161,6 +130,55 @@ export class CopilotService {
       onError(messageId, message);
     } finally {
       this.activeAbortControllers.delete(conversationId);
+    }
+  }
+
+  /** Inject active agent context into the prompt so the model knows which agents exist. */
+  private enrichPrompt(prompt: string): string {
+    if (!this.agentContextProvider) return prompt;
+    const agents = this.agentContextProvider();
+    if (agents.length === 0) return prompt;
+    const agentList = agents.map(a => `- ${a.label} (ID: ${a.agentId}, path: ${a.cwd})`).join('\n');
+    return `<active_agents>\n${agentList}\n</active_agents>\n\n${prompt}`;
+  }
+
+  /** Subscribe to debug logging and streaming delta events on the session. */
+  private subscribeToEvents(
+    session: CopilotSessionType,
+    abortController: AbortController,
+    messageId: string,
+    onChunk: (messageId: string, content: string) => void,
+  ): { unsubscribeAll: () => void; hasReceivedChunks: () => boolean } {
+    let receivedChunks = false;
+
+    const unsubDebug = session.on((event) => {
+      if (event.type === 'assistant.message_delta') return;
+      const payload = JSON.stringify(event.data ?? {}).slice(0, 200);
+      console.log(`[CopilotService] Event: ${event.type}`, payload);
+      logToFile(`Event: ${event.type} ${payload}`);
+    });
+
+    const unsubDelta = session.on('assistant.message_delta', (event) => {
+      if (abortController.signal.aborted) return;
+      receivedChunks = true;
+      onChunk(messageId, event.data.deltaContent);
+    });
+
+    return {
+      unsubscribeAll: () => { unsubDelta(); unsubDebug(); },
+      hasReceivedChunks: () => receivedChunks,
+    };
+  }
+
+  /** If no streaming chunks were received, send the full response content as a single chunk. */
+  private handleStreamingResponse(
+    response: { data: { content?: string } } | undefined,
+    receivedChunks: boolean,
+    messageId: string,
+    onChunk: (messageId: string, content: string) => void,
+  ): void {
+    if (!receivedChunks && response?.data.content) {
+      onChunk(messageId, response.data.content);
     }
   }
 

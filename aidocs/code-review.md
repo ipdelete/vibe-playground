@@ -12,7 +12,7 @@ The codebase is generally well-structured with clear separation between main pro
 
 | Severity | Count | Resolved |
 |----------|-------|----------|
-| High     | 7     | 5        |
+| High     | 7     | 6        |
 | Medium   | 15    | 3        |
 | Low      | 10    | 3        |
 
@@ -71,11 +71,13 @@ The codebase is generally well-structured with clear separation between main pro
 
 ---
 
-### H4. CopilotService.sendMessage() Does Too Many Things
+### H4. ~~CopilotService.sendMessage() Does Too Many Things~~ ✅ RESOLVED
 
-`src/main/services/CopilotService.ts:90-149` — 60-line method that handles session management, abort controllers, event subscription/unsubscription, streaming response handling, error recovery, and 3 separate callbacks (`onChunk`, `onDone`, `onError`).
+**Resolved in v0.10.10** — Extracted 3 private methods from `sendMessage()` (70→25 lines): `enrichPrompt()` (agent context injection), `subscribeToEvents()` (debug + delta subscriptions), `handleStreamingResponse()` (fallback when no streaming chunks). Added 9 new unit tests. All 274 tests pass.
 
-**Fix:** Break into `ensureSession()`, `subscribeToEvents()`, `handleResponse()`. Replace 3-callback pattern with an EventEmitter or async iterator.
+~~`src/main/services/CopilotService.ts:90-149` — 60-line method that handles session management, abort controllers, event subscription/unsubscription, streaming response handling, error recovery, and 3 separate callbacks (`onChunk`, `onDone`, `onError`).~~
+
+~~**Fix:** Break into `ensureSession()`, `subscribeToEvents()`, `handleResponse()`. Replace 3-callback pattern with an EventEmitter or async iterator.~~
 
 ---
 
@@ -333,6 +335,6 @@ Several test files have unused imports:
 | 3 | ~~Break up AppStateContext reducer (H2)~~ | ✅ Done (v0.10.6) |
 | 4 | ~~Extract ChatView into hooks (H3)~~ | ✅ Done (v0.10.8) |
 | 5 | ~~Extract preload.ts listener helper (M3)~~ | ✅ Done (v0.10.9) |
-| 6 | Break up CopilotService.sendMessage (H4) | Core service becomes testable |
+| 6 | ~~Break up CopilotService.sendMessage (H4)~~ | ✅ Done (v0.10.10) |
 | 7 | Extract renderer custom hooks (M7, M9, M10) | Cleaner component boundaries |
 | 8 | Convert ConversationService to async (M11) | Unblocks main thread |
