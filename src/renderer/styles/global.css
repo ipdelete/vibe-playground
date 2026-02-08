@@ -1001,6 +1001,7 @@ kbd {
   padding: var(--space-2) var(--space-3);
   font-size: var(--text-base);
   color: var(--text-primary);
+  min-height: 32px;
 }
 
 .activity-card-title {

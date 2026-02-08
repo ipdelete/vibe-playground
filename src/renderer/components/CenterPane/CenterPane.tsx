@@ -30,7 +30,7 @@ export function CenterPane() {
       {/* Agents - always rendered to preserve state */}
       <div 
         className="pane-content agent-pane"
-        style={{ display: !isShowingChat && isShowingAgent ? 'block' : 'none' }}
+        style={{ display: !isShowingChat && isShowingAgent && !(activeItem?.type === 'agent' && activeItem.item.hasSession) ? 'block' : 'none' }}
       >
         {agents.filter(a => !a.hasSession).map(agent => (
           <AgentView
