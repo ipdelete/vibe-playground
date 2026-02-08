@@ -43,6 +43,16 @@ export class CopilotService {
       if (this.systemMessage) {
         config.systemMessage = { mode: 'append', content: this.systemMessage };
       }
+      // Auto-approve permissions so CLI tools (bash, read, edit) don't block
+      config.onPermissionRequest = async (request: { kind: string }) => {
+        console.log(`[CopilotService] Permission auto-approved: ${request.kind}`);
+        return { kind: 'approved' };
+      };
+      // Handle user input requests so ask_user doesn't throw
+      config.onUserInputRequest = async (request: { question: string }) => {
+        console.log(`[CopilotService] User input requested: ${request.question}`);
+        return { answer: 'Not available in this context', wasFreeform: true };
+      };
       session = await client.createSession(config as Parameters<typeof client.createSession>[0]);
       this.sessions.set(conversationId, session);
       if (model) {
@@ -78,6 +88,12 @@ export class CopilotService {
 
       let receivedChunks = false;
 
+      // Log all events for debugging
+      const unsubDebug = session.on((event) => {
+        if (event.type === 'assistant.message_delta') return; // too noisy
+        console.log(`[CopilotService] Event: ${event.type}`, JSON.stringify(event.data ?? {}).slice(0, 200));
+      });
+
       // Stream deltas as they arrive
       const unsubDelta = session.on('assistant.message_delta', (event) => {
         if (abortController.signal.aborted) return;
@@ -86,9 +102,12 @@ export class CopilotService {
       });
 
       // sendAndWait blocks until the full response is ready
+      console.log(`[CopilotService] Sending prompt to session ${conversationId}`);
       const response = await session.sendAndWait({ prompt });
+      console.log(`[CopilotService] sendAndWait resolved for ${conversationId}`);
 
       unsubDelta();
+      unsubDebug();
 
       if (abortController.signal.aborted) return;
 
