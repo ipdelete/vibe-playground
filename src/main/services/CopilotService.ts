@@ -1,29 +1,16 @@
-// Dynamic import for ESM-only @github/copilot-sdk in CJS Electron main process
-type CopilotClientType = import('@github/copilot-sdk').CopilotClient;
+// Uses shared SDK loader for ESM-only @github/copilot-sdk in CJS Electron main process
+import { getSharedClient } from './SdkLoader';
+
 type CopilotSessionType = import('@github/copilot-sdk').CopilotSession;
 
-async function loadSdk() {
-  // eslint-disable-next-line @typescript-eslint/no-implied-eval
-  return new Function('return import("@github/copilot-sdk")')() as Promise<typeof import('@github/copilot-sdk')>;
-}
-
 export class CopilotService {
-  private client: CopilotClientType | null = null;
   private sessions: Map<string, CopilotSessionType> = new Map();
   private sessionModels: Map<string, string> = new Map();
   private activeAbortControllers: Map<string, AbortController> = new Map();
 
-  async start(): Promise<void> {
-    const { CopilotClient } = await loadSdk();
-    this.client = new CopilotClient();
-    await this.client.start();
-  }
-
   async listModels(): Promise<Array<{ id: string; name: string }>> {
-    if (!this.client) {
-      await this.start();
-    }
-    const models = await this.client!.listModels();
+    const client = await getSharedClient();
+    const models = await client.listModels();
     return models.map(m => ({ id: m.id, name: m.name }));
   }
 
@@ -36,11 +23,9 @@ export class CopilotService {
 
     let session = this.sessions.get(conversationId);
     if (!session) {
-      if (!this.client) {
-        await this.start();
-      }
+      const client = await getSharedClient();
       const config = model ? { model } : undefined;
-      session = await this.client!.createSession(config);
+      session = await client.createSession(config);
       this.sessions.set(conversationId, session);
       if (model) {
         this.sessionModels.set(conversationId, model);
@@ -127,9 +112,5 @@ export class CopilotService {
       this.sessions.delete(id);
     }
     this.sessionModels.clear();
-    if (this.client) {
-      await this.client.stop().catch(() => {});
-      this.client = null;
-    }
   }
 }
