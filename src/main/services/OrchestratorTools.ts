@@ -100,10 +100,11 @@ export async function createOrchestratorTools(): Promise<ToolType[]> {
       }
 
       try {
-        await agentSessionService.sendPrompt(args.agentId, args.prompt);
+        const result = await agentSessionService.sendPrompt(args.agentId, args.prompt);
         const info = managedAgents.get(args.agentId);
         return {
-          message: `Task sent to agent "${info?.label ?? args.agentId}" and completed.`,
+          agentLabel: info?.label ?? args.agentId,
+          agentResponse: result ?? 'Agent completed but produced no text response.',
         };
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);

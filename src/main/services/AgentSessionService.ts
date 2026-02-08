@@ -69,12 +69,13 @@ class AgentSessionService {
     this.sessions.set(agentId, { session, unsubscribe });
   }
 
-  async sendPrompt(agentId: string, prompt: string): Promise<void> {
+  async sendPrompt(agentId: string, prompt: string): Promise<string | undefined> {
     const entry = this.sessions.get(agentId);
     if (!entry) throw new Error(`No session for agent ${agentId}`);
-    // Use send() (non-blocking) so the orchestrator tool handler returns quickly.
-    // The activity feed shows progress via session events.
-    await entry.session.send({ prompt });
+    // Use sendAndWait so the orchestrator gets the actual result.
+    // 5 minute timeout — agent tasks can take a while.
+    const response = await entry.session.sendAndWait({ prompt }, 300_000);
+    return response?.data?.content;
   }
 
   async stopAgent(agentId: string): Promise<void> {
