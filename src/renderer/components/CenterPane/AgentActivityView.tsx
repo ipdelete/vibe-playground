@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { useAppState } from '../../contexts/AppStateContext';
 import { Icon } from '../Icon';
 import {
@@ -7,7 +7,6 @@ import {
   AgentEventToolStart,
   AgentEventToolComplete,
   AgentEventAssistantMessage,
-  AgentEventAssistantDelta,
   AgentEventError,
   AgentEventSubagentStarted,
   AgentEventSubagentCompleted,
@@ -18,16 +17,116 @@ interface AgentActivityViewProps {
   agentId: string;
 }
 
+// Merged representation of a tool call (start + optional complete)
+interface MergedToolCall {
+  kind: 'merged-tool';
+  toolCallId: string;
+  toolName: string;
+  arguments?: string;
+  completed: boolean;
+  success?: boolean;
+  result?: string;
+  error?: string;
+  timestamp: number;
+}
+
+type DisplayEvent = MergedToolCall | AgentEvent;
+
+function buildDisplayEvents(events: AgentEvent[]): DisplayEvent[] {
+  const toolCalls = new Map<string, MergedToolCall>();
+  const display: DisplayEvent[] = [];
+
+  // Accumulate assistant deltas into a single message
+  let accumulatedDelta = '';
+
+  for (const event of events) {
+    switch (event.kind) {
+      case 'tool-start': {
+        const merged: MergedToolCall = {
+          kind: 'merged-tool',
+          toolCallId: event.toolCallId,
+          toolName: event.toolName,
+          arguments: event.arguments,
+          completed: false,
+          timestamp: event.timestamp,
+        };
+        toolCalls.set(event.toolCallId, merged);
+        display.push(merged);
+        break;
+      }
+      case 'tool-complete': {
+        const existing = toolCalls.get(event.toolCallId);
+        if (existing) {
+          existing.completed = true;
+          existing.success = event.success;
+          existing.result = event.result;
+          existing.error = event.error;
+          if (existing.toolName === 'unknown' && event.toolName !== 'unknown') {
+            existing.toolName = event.toolName;
+          }
+        } else {
+          // No matching start — show standalone
+          display.push({
+            kind: 'merged-tool',
+            toolCallId: event.toolCallId,
+            toolName: event.toolName,
+            completed: true,
+            success: event.success,
+            result: event.result,
+            error: event.error,
+            timestamp: event.timestamp,
+          });
+        }
+        break;
+      }
+      case 'assistant-delta': {
+        accumulatedDelta += event.deltaContent;
+        break;
+      }
+      case 'tool-progress':
+      case 'tool-partial-result':
+        // Skip transient events
+        break;
+      default:
+        // Flush accumulated delta before non-delta events
+        if (accumulatedDelta) {
+          display.push({
+            kind: 'assistant-message',
+            messageId: 'accumulated',
+            content: accumulatedDelta,
+            timestamp: event.timestamp,
+          } as AgentEventAssistantMessage);
+          accumulatedDelta = '';
+        }
+        display.push(event);
+        break;
+    }
+  }
+
+  // Flush any remaining delta
+  if (accumulatedDelta) {
+    display.push({
+      kind: 'assistant-message',
+      messageId: 'accumulated',
+      content: accumulatedDelta,
+      timestamp: Date.now(),
+    } as AgentEventAssistantMessage);
+  }
+
+  return display;
+}
+
 export function AgentActivityView({ agentId }: AgentActivityViewProps) {
   const { state } = useAppState();
   const feedEndRef = useRef<HTMLDivElement>(null);
   const events = state.agentEvents[agentId] ?? [];
+  const displayEvents = useMemo(() => buildDisplayEvents(events), [events]);
 
   useEffect(() => {
     feedEndRef.current?.scrollIntoView?.({ behavior: 'smooth' });
-  }, [events.length]);
+  }, [displayEvents.length]);
 
-  if (events.length === 0) {
+  if (displayEvents.length === 0) {
     const agent = state.agents.find(a => a.id === agentId);
     return (
       <div className="activity-feed">
@@ -43,8 +142,8 @@ export function AgentActivityView({ agentId }: AgentActivityViewProps) {
   return (
     <div className="activity-feed">
       <div className="activity-events">
-        {events.map((event, i) => (
-          <EventCard key={i} event={event} />
+        {displayEvents.map((event, i) => (
+          <DisplayEventCard key={i} event={event} />
         ))}
         <div ref={feedEndRef} />
       </div>
@@ -52,16 +151,13 @@ export function AgentActivityView({ agentId }: AgentActivityViewProps) {
   );
 }
 
-function EventCard({ event }: { event: AgentEvent }) {
+function DisplayEventCard({ event }: { event: DisplayEvent }) {
+  if (event.kind === 'merged-tool') {
+    return <MergedToolCard event={event} />;
+  }
   switch (event.kind) {
-    case 'tool-start':
-      return <ToolStartCard event={event} />;
-    case 'tool-complete':
-      return <ToolCompleteCard event={event} />;
     case 'assistant-message':
       return <AssistantMessageCard event={event} />;
-    case 'assistant-delta':
-      return <AssistantDeltaCard event={event} />;
     case 'error':
       return <ErrorCard event={event} />;
     case 'subagent-started':
@@ -72,53 +168,43 @@ function EventCard({ event }: { event: AgentEvent }) {
       return <SubagentFailedCard event={event} />;
     case 'session-idle':
       return <IdleCard />;
-    case 'tool-progress':
-    case 'tool-partial-result':
-      // These are transient — skip rendering standalone cards
-      return null;
     default:
       return null;
   }
 }
 
-function ToolStartCard({ event }: { event: AgentEventToolStart }) {
+function MergedToolCard({ event }: { event: MergedToolCall }) {
+  const [expanded, setExpanded] = React.useState(false);
   const toolLabel = formatToolName(event.toolName);
   const argsSummary = event.arguments ? summarizeArgs(event.toolName, event.arguments) : null;
+  const hasContent = !!(event.result || event.error);
+
+  const statusClass = event.completed
+    ? event.success ? 'success' : 'failure'
+    : '';
 
   return (
-    <div className="activity-card activity-card-tool-start">
-      <div className="activity-card-header">
-        <Icon name="play" size="sm" />
+    <div className={`activity-card activity-card-tool-complete ${statusClass}`}>
+      <div
+        className="activity-card-header"
+        onClick={() => hasContent && setExpanded(!expanded)}
+        style={{ cursor: hasContent ? 'pointer' : 'default' }}
+      >
+        {event.completed
+          ? <Icon name={event.success ? 'check' : 'error'} size="sm" />
+          : <Icon name="play" size="sm" />
+        }
         <span className="activity-card-title">{toolLabel}</span>
-        <span className="activity-card-spinner" />
+        {!event.completed && <span className="activity-card-spinner" />}
+        {hasContent && (
+          <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size="sm" />
+        )}
       </div>
       {argsSummary && (
         <div className="activity-card-body">
           <code className="activity-code">{argsSummary}</code>
         </div>
       )}
-    </div>
-  );
-}
-
-function ToolCompleteCard({ event }: { event: AgentEventToolComplete }) {
-  const [expanded, setExpanded] = useState(false);
-  const toolLabel = formatToolName(event.toolName);
-  const hasContent = !!(event.result || event.error);
-
-  return (
-    <div className={`activity-card activity-card-tool-complete ${event.success ? 'success' : 'failure'}`}>
-      <div
-        className="activity-card-header"
-        onClick={() => hasContent && setExpanded(!expanded)}
-        style={{ cursor: hasContent ? 'pointer' : 'default' }}
-      >
-        <Icon name={event.success ? 'check' : 'error'} size="sm" />
-        <span className="activity-card-title">{toolLabel}</span>
-        {hasContent && (
-          <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size="sm" />
-        )}
-      </div>
       {expanded && hasContent && (
         <div className="activity-card-body">
           <pre className="activity-pre">{event.error || event.result}</pre>
@@ -141,12 +227,6 @@ function AssistantMessageCard({ event }: { event: AgentEventAssistantMessage }) 
       </div>
     </div>
   );
-}
-
-function AssistantDeltaCard({ event }: { event: AgentEventAssistantDelta }): React.ReactElement | null {
-  // Deltas are typically accumulated — show as-is for now
-  if (!event.deltaContent) return null;
-  return null; // Deltas will be accumulated into assistant-message; skip standalone render
 }
 
 function ErrorCard({ event }: { event: AgentEventError }) {
@@ -222,7 +302,10 @@ function formatToolName(toolName: string): string {
     case 'glob': return 'Finding files';
     case 'grep': return 'Searching code';
     case 'web_fetch': return 'Fetching URL';
-    default: return toolName;
+    case 'report_intent': return 'Planning';
+    case 'list_directory': return 'Listing directory';
+    case 'read_file': return 'Reading file';
+    default: return toolName.replace(/_/g, ' ');
   }
 }
 
@@ -236,6 +319,7 @@ function summarizeArgs(toolName: string, args: string): string {
       case 'view': return parsed.path ?? args;
       case 'glob': return parsed.pattern ?? args;
       case 'grep': return parsed.pattern ?? args;
+      case 'report_intent': return parsed.intent ?? args;
       default: return args.length > 120 ? args.substring(0, 120) + '…' : args;
     }
   } catch {
