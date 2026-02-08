@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { createContext, useContext, useReducer, ReactNode } from 'react';
-import { AppState, AppAction, Agent, AgentEvent, AgentStatus } from '../../shared/types';
+import { AppState, AppAction } from '../../shared/types';
+import { agentReducer } from './agentReducer';
+import { conversationReducer } from './conversationReducer';
 
 export const initialState: AppState = {
   agents: [],
@@ -18,232 +20,32 @@ export const initialState: AppState = {
 
 export function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
-    case 'ADD_AGENT': {
-      const newAgent: Agent = {
-        id: action.payload.id,
-        label: action.payload.label,
-        cwd: action.payload.cwd,
-        openFiles: [],
-        isWorktree: action.payload.isWorktree,
-        hasSession: action.payload.hasSession,
-        status: action.payload.hasSession ? 'idle' : undefined,
-      };
-      return {
-        ...state,
-        agents: [...state.agents, newAgent],
-        activeItemId: newAgent.id,
-        activeAgentId: newAgent.id,
-      };
-    }
+    case 'ADD_AGENT':
+    case 'REMOVE_AGENT':
+    case 'SET_ACTIVE_AGENT':
+    case 'SET_ACTIVE_ITEM':
+    case 'ADD_FILE':
+    case 'REMOVE_FILE':
+    case 'RENAME_AGENT':
+    case 'SET_VIEW_MODE':
+    case 'SET_AGENT_STATUS':
+    case 'SET_AGENT_HAS_SESSION':
+    case 'ADD_AGENT_EVENT':
+    case 'CLEAR_AGENT_EVENTS':
+      return agentReducer(state, action);
 
-    case 'REMOVE_AGENT': {
-      const filteredAgents = state.agents.filter(a => a.id !== action.payload.id);
-      const wasActive = state.activeAgentId === action.payload.id;
-      const newActiveAgentId = wasActive
-        ? filteredAgents[0]?.id ?? null
-        : state.activeAgentId;
-      const newActiveItemId = wasActive ? newActiveAgentId : state.activeItemId;
-      const { [action.payload.id]: _, ...remainingEvents } = state.agentEvents;
-
-      return {
-        ...state,
-        agents: filteredAgents,
-        activeItemId: newActiveItemId,
-        activeAgentId: newActiveAgentId,
-        agentEvents: remainingEvents,
-      };
-    }
-
-    case 'SET_ACTIVE_AGENT': {
-      return {
-        ...state,
-        activeItemId: action.payload.id,
-        activeAgentId: action.payload.id,
-        viewMode: 'agents',
-      };
-    }
-
-    case 'SET_ACTIVE_ITEM': {
-      return {
-        ...state,
-        activeItemId: action.payload.id,
-        activeAgentId: action.payload.agentId ?? state.activeAgentId,
-        viewMode: 'agents',
-      };
-    }
-
-    case 'ADD_FILE': {
-      return {
-        ...state,
-        agents: state.agents.map(a =>
-          a.id === action.payload.agentId
-            ? { ...a, openFiles: [...a.openFiles, action.payload.file] }
-            : a
-        ),
-        activeItemId: action.payload.file.id,
-      };
-    }
-
-    case 'REMOVE_FILE': {
-      const wasActive = state.activeItemId === action.payload.fileId;
-
-      return {
-        ...state,
-        agents: state.agents.map(a =>
-          a.id === action.payload.agentId
-            ? { ...a, openFiles: a.openFiles.filter(f => f.id !== action.payload.fileId) }
-            : a
-        ),
-        activeItemId: wasActive ? action.payload.agentId : state.activeItemId,
-      };
-    }
-
-    case 'RENAME_AGENT': {
-      return {
-        ...state,
-        agents: state.agents.map(a =>
-          a.id === action.payload.id ? { ...a, label: action.payload.label } : a
-        ),
-      };
-    }
-
-    case 'SET_VIEW_MODE': {
-      return {
-        ...state,
-        viewMode: action.payload.mode,
-      };
-    }
-
-    case 'ADD_CHAT_MESSAGE': {
-      return {
-        ...state,
-        chatMessages: [...state.chatMessages, action.payload.message],
-      };
-    }
-
-    case 'APPEND_CHAT_CHUNK': {
-      return {
-        ...state,
-        chatMessages: state.chatMessages.map(m =>
-          m.id === action.payload.messageId
-            ? { ...m, content: m.content + action.payload.content }
-            : m
-        ),
-      };
-    }
-
-    case 'SET_CHAT_LOADING': {
-      return {
-        ...state,
-        chatLoading: action.payload.loading,
-      };
-    }
-
-    case 'SET_CONVERSATIONS': {
-      return {
-        ...state,
-        conversations: action.payload.conversations,
-      };
-    }
-
-    case 'ADD_CONVERSATION': {
-      return {
-        ...state,
-        conversations: [action.payload.conversation, ...state.conversations],
-        activeConversationId: action.payload.conversation.id,
-        chatMessages: [],
-      };
-    }
-
-    case 'REMOVE_CONVERSATION': {
-      const filtered = state.conversations.filter(c => c.id !== action.payload.id);
-      const wasActive = state.activeConversationId === action.payload.id;
-      return {
-        ...state,
-        conversations: filtered,
-        activeConversationId: wasActive ? (filtered[0]?.id ?? null) : state.activeConversationId,
-        chatMessages: wasActive ? [] : state.chatMessages,
-      };
-    }
-
-    case 'RENAME_CONVERSATION': {
-      return {
-        ...state,
-        conversations: state.conversations.map(c =>
-          c.id === action.payload.id ? { ...c, title: action.payload.title } : c
-        ),
-      };
-    }
-
-    case 'SET_ACTIVE_CONVERSATION': {
-      return {
-        ...state,
-        activeConversationId: action.payload.id,
-        chatMessages: [],
-      };
-    }
-
-    case 'SET_CHAT_MESSAGES': {
-      return {
-        ...state,
-        chatMessages: action.payload.messages,
-      };
-    }
-
-    case 'SET_AVAILABLE_MODELS': {
-      return {
-        ...state,
-        availableModels: action.payload.models,
-      };
-    }
-
-    case 'SET_SELECTED_MODEL': {
-      return {
-        ...state,
-        selectedModel: action.payload.model,
-      };
-    }
-
-    case 'ADD_AGENT_EVENT': {
-      const existing = state.agentEvents[action.payload.agentId] ?? [];
-      return {
-        ...state,
-        agentEvents: {
-          ...state.agentEvents,
-          [action.payload.agentId]: [...existing, action.payload.event],
-        },
-      };
-    }
-
-    case 'SET_AGENT_STATUS': {
-      return {
-        ...state,
-        agents: state.agents.map(a =>
-          a.id === action.payload.agentId ? { ...a, status: action.payload.status } : a
-        ),
-      };
-    }
-
-    case 'CLEAR_AGENT_EVENTS': {
-      return {
-        ...state,
-        agentEvents: {
-          ...state.agentEvents,
-          [action.payload.agentId]: [],
-        },
-      };
-    }
-
-    case 'SET_AGENT_HAS_SESSION': {
-      return {
-        ...state,
-        agents: state.agents.map(a =>
-          a.id === action.payload.agentId
-            ? { ...a, hasSession: action.payload.hasSession, status: action.payload.hasSession ? 'idle' : undefined }
-            : a
-        ),
-      };
-    }
+    case 'ADD_CHAT_MESSAGE':
+    case 'APPEND_CHAT_CHUNK':
+    case 'SET_CHAT_LOADING':
+    case 'SET_CONVERSATIONS':
+    case 'ADD_CONVERSATION':
+    case 'REMOVE_CONVERSATION':
+    case 'RENAME_CONVERSATION':
+    case 'SET_ACTIVE_CONVERSATION':
+    case 'SET_CHAT_MESSAGES':
+    case 'SET_AVAILABLE_MODELS':
+    case 'SET_SELECTED_MODEL':
+      return conversationReducer(state, action);
 
     default:
       return state;

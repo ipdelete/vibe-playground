@@ -12,7 +12,7 @@ The codebase is generally well-structured with clear separation between main pro
 
 | Severity | Count | Resolved |
 |----------|-------|----------|
-| High     | 7     | 3        |
+| High     | 7     | 4        |
 | Medium   | 15    | 2        |
 | Low      | 10    | 3        |
 
@@ -44,11 +44,13 @@ The codebase is generally well-structured with clear separation between main pro
 
 ---
 
-### H2. 248-Line Reducer in AppStateContext.tsx
+### H2. ~~248-Line Reducer in AppStateContext.tsx~~ ✅ RESOLVED
 
-`src/renderer/contexts/AppStateContext.tsx` — the `appReducer` function has 22 case branches in ~248 lines. Agent-filtering logic is duplicated between `REMOVE_AGENT` and `SET_ACTIVE_AGENT`. Several cases have 3-4 levels of nesting.
+**Resolved in v0.10.6** — Split monolithic `appReducer` (22 cases, 230 lines) into two focused sub-reducers: `agentReducer` (12 actions) and `conversationReducer` (11 actions). Composed `appReducer` now delegates via a thin switch. Added 39 new unit tests covering 11 previously untested actions. All 227 tests pass.
 
-**Fix:** Split into focused sub-reducers (`agentReducer`, `conversationReducer`, `viewReducer`) composed together.
+~~`src/renderer/contexts/AppStateContext.tsx` — the `appReducer` function has 22 case branches in ~248 lines. Agent-filtering logic is duplicated between `REMOVE_AGENT` and `SET_ACTIVE_AGENT`. Several cases have 3-4 levels of nesting.~~
+
+~~**Fix:** Split into focused sub-reducers (`agentReducer`, `conversationReducer`, `viewReducer`) composed together.~~
 
 ---
 
@@ -324,7 +326,7 @@ Several test files have unused imports:
 |----------|--------|--------|
 | 1 | ~~Delete duplicate type definitions (H1)~~ | ✅ Done (c67a116) |
 | 2 | ~~Delete unused methods and imports (M1, M2, H6, H7, L3-L5)~~ | ✅ Done (v0.10.5) |
-| 3 | Break up AppStateContext reducer (H2) | Most-edited file becomes maintainable |
+| 3 | ~~Break up AppStateContext reducer (H2)~~ | ✅ Done (v0.10.6) |
 | 4 | Extract ChatView into hooks (H3) | Largest component becomes testable |
 | 5 | Extract preload.ts listener helper (M3) | ~60 lines of repetition eliminated |
 | 6 | Break up CopilotService.sendMessage (H4) | Core service becomes testable |
