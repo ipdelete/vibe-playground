@@ -4,8 +4,6 @@ import { useAppState } from '../../contexts/AppStateContext';
 import { Icon } from '../Icon';
 import {
   AgentEvent,
-  AgentEventToolStart,
-  AgentEventToolComplete,
   AgentEventAssistantMessage,
   AgentEventError,
   AgentEventSubagentStarted,

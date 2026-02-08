@@ -2,6 +2,7 @@
 
 **Date:** 2026-02-08
 **Scope:** Full codebase review of `src/`, config files, and `package.json`
+**Last Updated:** 2026-02-08
 
 ---
 
@@ -9,19 +10,21 @@
 
 The codebase is generally well-structured with clear separation between main process, renderer, and shared types. However, there are **duplicate type definitions across 3 layers**, a **248-line reducer function**, several **unused methods and imports**, and **god components** that mix too many responsibilities. The biggest wins come from consolidating types, breaking up large functions, and removing dead code.
 
-| Severity | Count |
-|----------|-------|
-| High     | 7     |
-| Medium   | 15    |
-| Low      | 10    |
+| Severity | Count | Resolved |
+|----------|-------|----------|
+| High     | 7     | 3        |
+| Medium   | 15    | 2        |
+| Low      | 10    | 3        |
 
 ---
 
 ## High Severity
 
-### H1. Duplicate Type Definitions Across 3 Layers
+### H1. ~~Duplicate Type Definitions Across 3 Layers~~ ✅ RESOLVED
 
-Types are defined independently in `src/shared/types.ts`, service files, and `src/preload.ts` instead of having a single source of truth.
+**Resolved in** `c67a116` **(v0.10.4)** — Consolidated all duplicate types into `src/shared/types.ts`. Added `FileEntry` and `GitStatusChangeEvent`. Removed 82 lines of duplicates across 8 files. All 192 tests pass.
+
+~~Types are defined independently in `src/shared/types.ts`, service files, and `src/preload.ts` instead of having a single source of truth.~~
 
 **`FileWatchEvent`** defined identically in 3 places:
 - `src/shared/types.ts:154`
@@ -80,45 +83,45 @@ Types are defined independently in `src/shared/types.ts`, service files, and `sr
 
 ---
 
-### H6. Unused Exports from types.ts
+### H6. ~~Unused Exports from types.ts~~ ✅ RESOLVED
 
-These types are exported but never imported anywhere:
-- `AgentEventToolProgress` (line 33)
-- `AgentEventToolPartialResult` (line 40)
-- `AgentEventAssistantDelta` (line 54)
-- `DownloadProgress` (line 218)
-- `AgentEventPermissionRequest` (line 68)
+**Resolved in v0.10.5** — Removed `export` keyword from 5 interfaces that are used internally (in `AgentEvent` union / `UpdateState`) but never imported elsewhere: `AgentEventToolProgress`, `AgentEventToolPartialResult`, `AgentEventAssistantDelta`, `DownloadProgress`, `AgentEventPermissionRequest`.
 
-**Fix:** Remove exports (or the types entirely if unused).
+~~These types are exported but never imported anywhere:~~
+- ~~`AgentEventToolProgress` (line 33)~~
+- ~~`AgentEventToolPartialResult` (line 40)~~
+- ~~`AgentEventAssistantDelta` (line 54)~~
+- ~~`DownloadProgress` (line 218)~~
+- ~~`AgentEventPermissionRequest` (line 68)~~
 
 ---
 
-### H7. Unused `loadSdk` Import in CopilotService
+### H7. ~~Unused `loadSdk` Import in CopilotService~~ ✅ RESOLVED
 
-`src/main/services/CopilotService.ts:5` — `loadSdk` is imported but never used. Only `getSharedClient` is called.
+**Resolved in v0.10.5** — Removed unused `loadSdk` from import statement in `CopilotService.ts`.
 
-**Fix:** Remove the import.
+~~`src/main/services/CopilotService.ts:5` — `loadSdk` is imported but never used. Only `getSharedClient` is called.~~
 
 ---
 
 ## Medium Severity
 
-### M1. Unused Methods in FileService
+### M1. ~~Unused Methods in FileService~~ ✅ RESOLVED
 
-`src/main/services/FileService.ts` — three public methods are never called:
-- `removeAllowedRoot()` (line 19)
-- `clearAllowedRoots()` (line 24)
-- `fileExists()` (line 82)
+**Resolved in v0.10.5** — Deleted `removeAllowedRoot()`, `clearAllowedRoots()`, `fileExists()` from `FileService.ts`. Removed associated tests and test mocks from `FileService.test.ts`.
 
-**Fix:** Delete them.
+~~`src/main/services/FileService.ts` — three public methods are never called:~~
+- ~~`removeAllowedRoot()` (line 19)~~
+- ~~`clearAllowedRoots()` (line 24)~~
+- ~~`fileExists()` (line 82)~~
 
 ---
 
-### M2. Unused `getGitStatusWithIgnored()` in GitService
+### M2. ~~Unused `getGitStatusWithIgnored()` in GitService~~ ✅ RESOLVED
 
-`src/main/services/GitService.ts:166-184` — method defined but never called. Only `getGitStatus()` is used via IPC.
+**Resolved in v0.10.5** — Deleted `getGitStatusWithIgnored()` method from `GitService.ts` and its test from `GitService.test.ts`.
 
-**Fix:** Delete it.
+~~`src/main/services/GitService.ts:166-184` — method defined but never called. Only `getGitStatus()` is used via IPC.~~
 
 ---
 
@@ -253,21 +256,27 @@ Errors during shutdown are silently discarded.
 
 ---
 
-### L3. Unused `path` Import in UpdateService
+### L3. ~~Unused `path` Import in UpdateService~~ ✅ RESOLVED
 
-`src/main/services/UpdateService.ts:3` — `path` is imported but never used.
+**Resolved in v0.10.5** — Removed unused `import * as path from 'path'` from `UpdateService.ts`.
 
----
-
-### L4. Unused Type Imports in AgentActivityView
-
-`src/renderer/components/CenterPane/AgentActivityView.tsx:7-8` — `AgentEventToolStart` and `AgentEventToolComplete` are imported but only used via `event.kind` string matching, not as type annotations.
+~~`src/main/services/UpdateService.ts:3` — `path` is imported but never used.~~
 
 ---
 
-### L5. Unused `getWatchedDirectories()` in FileWatcherService
+### L4. ~~Unused Type Imports in AgentActivityView~~ ✅ RESOLVED
 
-`src/main/services/FileWatcherService.ts:120-122` — defined but never called.
+**Resolved in v0.10.5** — Removed unused `AgentEventToolStart` and `AgentEventToolComplete` imports from `AgentActivityView.tsx`.
+
+~~`src/renderer/components/CenterPane/AgentActivityView.tsx:7-8` — `AgentEventToolStart` and `AgentEventToolComplete` are imported but only used via `event.kind` string matching, not as type annotations.~~
+
+---
+
+### L5. ~~Unused `getWatchedDirectories()` in FileWatcherService~~ ✅ RESOLVED
+
+**Resolved in v0.10.5** — Deleted `getWatchedDirectories()` method from `FileWatcherService.ts`.
+
+~~`src/main/services/FileWatcherService.ts:120-122` — defined but never called.~~
 
 ---
 
@@ -313,8 +322,8 @@ Several test files have unused imports:
 
 | Priority | Action | Impact |
 |----------|--------|--------|
-| 1 | Delete duplicate type definitions (H1) | Eliminates 3 maintenance hazards |
-| 2 | Delete unused methods and imports (M1, M2, H6, H7, L3-L5) | ~80 lines of dead code removed |
+| 1 | ~~Delete duplicate type definitions (H1)~~ | ✅ Done (c67a116) |
+| 2 | ~~Delete unused methods and imports (M1, M2, H6, H7, L3-L5)~~ | ✅ Done (v0.10.5) |
 | 3 | Break up AppStateContext reducer (H2) | Most-edited file becomes maintainable |
 | 4 | Extract ChatView into hooks (H3) | Largest component becomes testable |
 | 5 | Extract preload.ts listener helper (M3) | ~60 lines of repetition eliminated |

@@ -108,13 +108,6 @@ class FileWatcherService {
   }
 
   /**
-   * Get list of currently watched directories
-   */
-  getWatchedDirectories(): string[] {
-    return Array.from(this.watchers.keys());
-  }
-
-  /**
    * Start watching a git repository's index for status changes
    */
   watchGitRepo(repoRoot: string): boolean {

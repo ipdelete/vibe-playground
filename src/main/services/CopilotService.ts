@@ -2,7 +2,7 @@
 import { app } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
-import { getSharedClient, loadSdk } from './SdkLoader';
+import { getSharedClient } from './SdkLoader';
 
 type CopilotSessionType = import('@github/copilot-sdk').CopilotSession;
 type ToolType = import('@github/copilot-sdk').Tool;

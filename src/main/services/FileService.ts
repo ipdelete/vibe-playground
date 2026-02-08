@@ -12,15 +12,6 @@ class FileService {
     this.allowedRoots.add(normalized);
   }
 
-  removeAllowedRoot(rootPath: string): void {
-    const normalized = path.resolve(rootPath);
-    this.allowedRoots.delete(normalized);
-  }
-
-  clearAllowedRoots(): void {
-    this.allowedRoots.clear();
-  }
-
   isPathAllowed(targetPath: string): boolean {
     const normalized = path.resolve(targetPath);
     for (const root of this.allowedRoots) {
@@ -75,14 +66,6 @@ class FileService {
     }
   }
 
-  async fileExists(filePath: string): Promise<boolean> {
-    try {
-      await fs.promises.access(filePath);
-      return true;
-    } catch {
-      return false;
-    }
-  }
 }
 
 export const fileService = new FileService();

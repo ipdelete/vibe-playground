@@ -160,28 +160,6 @@ class GitService {
     }
   }
 
-  /**
-   * Get git status including ignored files
-   */
-  async getGitStatusWithIgnored(dirPath: string): Promise<GitStatusMap> {
-    try {
-      const repoRoot = await this.getGitRoot(dirPath);
-      if (!repoRoot) {
-        return {};
-      }
-
-      // Get status including untracked and ignored files
-      const output = await this.execGit(
-        ['status', '--porcelain', '-uall', '--ignored'],
-        repoRoot
-      );
-
-      return this.parseStatusOutput(output, repoRoot);
-    } catch (error) {
-      console.error('Error getting git status with ignored:', error);
-      return {};
-    }
-  }
 }
 
 export const gitService = new GitService();

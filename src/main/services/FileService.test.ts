@@ -6,7 +6,6 @@ jest.mock('fs', () => ({
   promises: {
     readdir: jest.fn(),
     readFile: jest.fn(),
-    access: jest.fn(),
   },
 }));
 
@@ -15,13 +14,12 @@ import { fileService, FileEntry } from './FileService';
 
 const mockReaddir = fs.promises.readdir as jest.MockedFunction<typeof fs.promises.readdir>;
 const mockReadFile = fs.promises.readFile as jest.MockedFunction<typeof fs.promises.readFile>;
-const mockAccess = fs.promises.access as jest.MockedFunction<typeof fs.promises.access>;
 
 describe('FileService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Reset allowed roots between tests
-    fileService.clearAllowedRoots();
+    // Reset allowed roots between tests by re-importing singleton
+    (fileService as any).allowedRoots = new Set();
   });
 
   describe('path validation', () => {
@@ -81,20 +79,6 @@ describe('FileService', () => {
       expect(mockReadFile).toHaveBeenCalledTimes(2);
     });
 
-    it('should remove allowed root correctly', async () => {
-      fileService.addAllowedRoot('/home/user/project');
-      mockReadFile.mockResolvedValue('content');
-
-      // Should work before removal
-      await fileService.readFile('/home/user/project/file.ts');
-      expect(mockReadFile).toHaveBeenCalledTimes(1);
-
-      // Remove the root
-      fileService.removeAllowedRoot('/home/user/project');
-
-      // Should fail after removal
-      await expect(fileService.readFile('/home/user/project/file.ts')).rejects.toThrow('Access denied');
-    });
   });
 
   describe('readDirectory', () => {
@@ -187,25 +171,6 @@ describe('FileService', () => {
       mockReadFile.mockRejectedValue(new Error('ENOENT: no such file'));
 
       await expect(fileService.readFile('/test/missing.txt')).rejects.toThrow('ENOENT');
-    });
-  });
-
-  describe('fileExists', () => {
-    it('should return true when file exists', async () => {
-      mockAccess.mockResolvedValue(undefined);
-
-      const result = await fileService.fileExists('/test/file.txt');
-
-      expect(result).toBe(true);
-      expect(mockAccess).toHaveBeenCalledWith('/test/file.txt');
-    });
-
-    it('should return false when file does not exist', async () => {
-      mockAccess.mockRejectedValue(new Error('ENOENT'));
-
-      const result = await fileService.fileExists('/test/missing.txt');
-
-      expect(result).toBe(false);
     });
   });
 });

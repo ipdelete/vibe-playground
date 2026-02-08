@@ -1,6 +1,6 @@
 import { app } from 'electron';
 import { autoUpdater, UpdateInfo, ProgressInfo } from 'electron-updater';
-import * as path from 'path';
+
 
 export type UpdateStatusType = 'checking' | 'available' | 'not-available' | 'downloading' | 'ready' | 'error' | 'dev-mode';
 

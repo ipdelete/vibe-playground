@@ -30,14 +30,14 @@ export interface AgentEventToolComplete {
   timestamp: number;
 }
 
-export interface AgentEventToolProgress {
+interface AgentEventToolProgress {
   kind: 'tool-progress';
   toolCallId: string;
   progressMessage: string;
   timestamp: number;
 }
 
-export interface AgentEventToolPartialResult {
+interface AgentEventToolPartialResult {
   kind: 'tool-partial-result';
   toolCallId: string;
   partialOutput: string;
@@ -51,7 +51,7 @@ export interface AgentEventAssistantMessage {
   timestamp: number;
 }
 
-export interface AgentEventAssistantDelta {
+interface AgentEventAssistantDelta {
   kind: 'assistant-delta';
   messageId: string;
   deltaContent: string;
@@ -65,7 +65,7 @@ export interface AgentEventError {
   timestamp: number;
 }
 
-export interface AgentEventPermissionRequest {
+interface AgentEventPermissionRequest {
   kind: 'permission-request';
   toolCallId: string;
   toolName: string;
@@ -215,7 +215,7 @@ export interface UpdateInfo {
   releaseDate?: string;
 }
 
-export interface DownloadProgress {
+interface DownloadProgress {
   percent: number;
   bytesPerSecond: number;
   transferred: number;

@@ -212,16 +212,4 @@ describe('GitService', () => {
     });
   });
 
-  describe('getGitStatusWithIgnored', () => {
-    it('should include ignored files', async () => {
-      const repoRoot = testPath('/repo');
-      mockSpawn
-        .mockReturnValueOnce(createMockProcess(repoRoot + '\n') as any)
-        .mockReturnValueOnce(createMockProcess('!! node_modules/\n') as any);
-
-      const result = await gitService.getGitStatusWithIgnored(repoRoot);
-
-      expect(result[testPath(repoRoot, 'node_modules/')]).toBe('ignored');
-    });
-  });
 });
