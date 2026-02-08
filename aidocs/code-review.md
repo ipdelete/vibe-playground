@@ -13,7 +13,7 @@ The codebase is generally well-structured with clear separation between main pro
 | Severity | Count | Resolved |
 |----------|-------|----------|
 | High     | 7     | 5        |
-| Medium   | 15    | 2        |
+| Medium   | 15    | 3        |
 | Low      | 10    | 3        |
 
 ---
@@ -129,11 +129,13 @@ The codebase is generally well-structured with clear separation between main pro
 
 ---
 
-### M3. Repetitive IPC Listener Pattern in preload.ts
+### M3. ~~Repetitive IPC Listener Pattern in preload.ts~~ ✅ RESOLVED
 
-`src/preload.ts` — the same callback wrapper pattern (create handler, subscribe via `ipcRenderer.on`, return cleanup function) is copy-pasted 15+ times across `agent.onData`, `agent.onExit`, `fs.onDirectoryChanged`, `git.onStatusChanged`, and `updates.*`.
+**Resolved in v0.10.9** — Extracted `createIpcListener()` helper into `src/createIpcListener.ts`. Replaced all 12 copy-pasted listener blocks in `preload.ts` with one-liner calls. Added 7 unit tests. All 265 tests pass.
 
-**Fix:** Extract a helper: `function createListener(channel, handler)`.
+~~`src/preload.ts` — the same callback wrapper pattern (create handler, subscribe via `ipcRenderer.on`, return cleanup function) is copy-pasted 15+ times across `agent.onData`, `agent.onExit`, `fs.onDirectoryChanged`, `git.onStatusChanged`, and `updates.*`.~~
+
+~~**Fix:** Extract a helper: `function createListener(channel, handler)`.~~
 
 ---
 
@@ -330,7 +332,7 @@ Several test files have unused imports:
 | 2 | ~~Delete unused methods and imports (M1, M2, H6, H7, L3-L5)~~ | ✅ Done (v0.10.5) |
 | 3 | ~~Break up AppStateContext reducer (H2)~~ | ✅ Done (v0.10.6) |
 | 4 | ~~Extract ChatView into hooks (H3)~~ | ✅ Done (v0.10.8) |
-| 5 | Extract preload.ts listener helper (M3) | ~60 lines of repetition eliminated |
+| 5 | ~~Extract preload.ts listener helper (M3)~~ | ✅ Done (v0.10.9) |
 | 6 | Break up CopilotService.sendMessage (H4) | Core service becomes testable |
 | 7 | Extract renderer custom hooks (M7, M9, M10) | Cleaner component boundaries |
 | 8 | Convert ConversationService to async (M11) | Unblocks main thread |

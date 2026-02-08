@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import { createIpcListener } from './createIpcListener';
 import type { FileEntry, FileWatchEvent, GitFileStatus, GitStatusMap, SessionData } from './shared/types';
 
 export type { FileEntry, FileWatchEvent, GitFileStatus, GitStatusMap, SessionData };
@@ -75,24 +76,8 @@ const electronAPI: ElectronAPI = {
     write: (id, data) => ipcRenderer.invoke('agent:write', id, data),
     resize: (id, cols, rows) => ipcRenderer.invoke('agent:resize', id, cols, rows),
     kill: (id) => ipcRenderer.invoke('agent:kill', id),
-    onData: (callback) => {
-      const handler = (_event: Electron.IpcRendererEvent, id: string, data: string) => {
-        callback(id, data);
-      };
-      ipcRenderer.on('agent:data', handler);
-      return () => {
-        ipcRenderer.removeListener('agent:data', handler);
-      };
-    },
-    onExit: (callback) => {
-      const handler = (_event: Electron.IpcRendererEvent, id: string, exitCode: number) => {
-        callback(id, exitCode);
-      };
-      ipcRenderer.on('agent:exit', handler);
-      return () => {
-        ipcRenderer.removeListener('agent:exit', handler);
-      };
-    },
+    onData: (callback) => createIpcListener(ipcRenderer, 'agent:data', callback),
+    onExit: (callback) => createIpcListener(ipcRenderer, 'agent:exit', callback),
   },
   fs: {
     readDirectory: (dirPath) => ipcRenderer.invoke('fs:readDirectory', dirPath),
@@ -101,16 +86,7 @@ const electronAPI: ElectronAPI = {
     watchDirectory: (dirPath) => ipcRenderer.invoke('fs:watchDirectory', dirPath),
     unwatchDirectory: (dirPath) => ipcRenderer.invoke('fs:unwatchDirectory', dirPath),
     unwatchAll: () => ipcRenderer.invoke('fs:unwatchAll'),
-    onDirectoryChanged: (callback) => {
-      const handler = (_event: Electron.IpcRendererEvent, watchEvent: FileWatchEvent) => {
-        callback(watchEvent);
-      };
-      ipcRenderer.on('fs:directoryChanged', handler);
-      // Return cleanup function
-      return () => {
-        ipcRenderer.removeListener('fs:directoryChanged', handler);
-      };
-    },
+    onDirectoryChanged: (callback) => createIpcListener(ipcRenderer, 'fs:directoryChanged', callback),
   },
   git: {
     isRepo: (dirPath) => ipcRenderer.invoke('git:isRepo', dirPath),
@@ -118,15 +94,7 @@ const electronAPI: ElectronAPI = {
     getRoot: (dirPath) => ipcRenderer.invoke('git:getRoot', dirPath),
     watchRepo: (repoRoot) => ipcRenderer.invoke('git:watchRepo', repoRoot),
     unwatchRepo: (repoRoot) => ipcRenderer.invoke('git:unwatchRepo', repoRoot),
-    onStatusChanged: (callback) => {
-      const handler = (_event: Electron.IpcRendererEvent, event: { repoRoot: string }) => {
-        callback(event);
-      };
-      ipcRenderer.on('git:statusChanged', handler);
-      return () => {
-        ipcRenderer.removeListener('git:statusChanged', handler);
-      };
-    },
+    onStatusChanged: (callback) => createIpcListener(ipcRenderer, 'git:statusChanged', callback),
   },
   session: {
     save: (data) => ipcRenderer.invoke('session:save', data),
@@ -143,91 +111,27 @@ const electronAPI: ElectronAPI = {
     check: () => ipcRenderer.invoke('updates:check'),
     download: () => ipcRenderer.invoke('updates:download'),
     install: () => ipcRenderer.invoke('updates:install'),
-    onStatus: (callback) => {
-      const handler = (_event: Electron.IpcRendererEvent, data: { status: string; info?: unknown; message?: string }) => {
-        callback(data);
-      };
-      ipcRenderer.on('updates:status', handler);
-      return () => {
-        ipcRenderer.removeListener('updates:status', handler);
-      };
-    },
-    onProgress: (callback) => {
-      const handler = (_event: Electron.IpcRendererEvent, progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => {
-        callback(progress);
-      };
-      ipcRenderer.on('updates:progress', handler);
-      return () => {
-        ipcRenderer.removeListener('updates:progress', handler);
-      };
-    },
+    onStatus: (callback) => createIpcListener(ipcRenderer, 'updates:status', callback),
+    onProgress: (callback) => createIpcListener(ipcRenderer, 'updates:progress', callback),
   },
   copilot: {
     listModels: () => ipcRenderer.invoke('copilot:listModels'),
     send: (conversationId, message, messageId, model) => ipcRenderer.invoke('copilot:send', conversationId, message, messageId, model),
     stop: (conversationId, messageId) => ipcRenderer.invoke('copilot:stop', conversationId, messageId),
-    onChunk: (callback) => {
-      const handler = (_event: Electron.IpcRendererEvent, messageId: string, content: string) => {
-        callback(messageId, content);
-      };
-      ipcRenderer.on('copilot:chunk', handler);
-      return () => {
-        ipcRenderer.removeListener('copilot:chunk', handler);
-      };
-    },
-    onDone: (callback) => {
-      const handler = (_event: Electron.IpcRendererEvent, messageId: string) => {
-        callback(messageId);
-      };
-      ipcRenderer.on('copilot:done', handler);
-      return () => {
-        ipcRenderer.removeListener('copilot:done', handler);
-      };
-    },
-    onError: (callback) => {
-      const handler = (_event: Electron.IpcRendererEvent, messageId: string, error: string) => {
-        callback(messageId, error);
-      };
-      ipcRenderer.on('copilot:error', handler);
-      return () => {
-        ipcRenderer.removeListener('copilot:error', handler);
-      };
-    },
+    onChunk: (callback) => createIpcListener(ipcRenderer, 'copilot:chunk', callback),
+    onDone: (callback) => createIpcListener(ipcRenderer, 'copilot:done', callback),
+    onError: (callback) => createIpcListener(ipcRenderer, 'copilot:error', callback),
   },
   agentSession: {
     create: (agentId, cwd, model) => ipcRenderer.invoke('agent-session:create', agentId, cwd, model),
     send: (agentId, prompt) => ipcRenderer.invoke('agent-session:send', agentId, prompt),
     stop: (agentId) => ipcRenderer.invoke('agent-session:stop', agentId),
     destroy: (agentId) => ipcRenderer.invoke('agent-session:destroy', agentId),
-    onEvent: (callback) => {
-      const handler = (_event: Electron.IpcRendererEvent, agentId: string, event: unknown) => {
-        callback(agentId, event);
-      };
-      ipcRenderer.on('agent-session:event', handler);
-      return () => {
-        ipcRenderer.removeListener('agent-session:event', handler);
-      };
-    },
-    onPermissionRequest: (callback) => {
-      const handler = (_event: Electron.IpcRendererEvent, agentId: string, request: { toolCallId?: string; kind: string }) => {
-        callback(agentId, request);
-      };
-      ipcRenderer.on('agent-session:permission-request', handler);
-      return () => {
-        ipcRenderer.removeListener('agent-session:permission-request', handler);
-      };
-    },
+    onEvent: (callback) => createIpcListener(ipcRenderer, 'agent-session:event', callback),
+    onPermissionRequest: (callback) => createIpcListener(ipcRenderer, 'agent-session:permission-request', callback),
     respondPermission: (agentId, toolCallId, decision) =>
       ipcRenderer.invoke('agent-session:permission-respond', agentId, toolCallId, decision),
-    onAgentCreated: (callback) => {
-      const handler = (_event: Electron.IpcRendererEvent, info: { agentId: string; label: string; cwd: string }) => {
-        callback(info);
-      };
-      ipcRenderer.on('orchestrator:agent-created', handler);
-      return () => {
-        ipcRenderer.removeListener('orchestrator:agent-created', handler);
-      };
-    },
+    onAgentCreated: (callback) => createIpcListener(ipcRenderer, 'orchestrator:agent-created', callback),
   },
 };
 
