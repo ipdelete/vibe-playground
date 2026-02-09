@@ -6,7 +6,7 @@ jest.mock('child_process', () => ({
   spawn: jest.fn(),
 }));
 
-import { gitService, GitStatusMap } from './GitService';
+import { gitService } from './GitService';
 
 const mockSpawn = spawn as jest.MockedFunction<typeof spawn>;
 

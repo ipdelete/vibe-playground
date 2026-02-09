@@ -158,5 +158,4 @@ export function getFileIcon(filename: string): IconName {
   
   return 'file';
 }
-
-export default Icon;
+

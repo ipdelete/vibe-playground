@@ -1,7 +1,5 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { SessionFile } from './SessionService';
-
 // Mock electron app
 jest.mock('electron', () => ({
   app: {
@@ -17,7 +15,7 @@ jest.mock('fs', () => ({
 }));
 
 // Import after mocking
-import { sessionService, SessionData } from './SessionService';
+import { sessionService, SessionData, SessionFile } from './SessionService';
 
 const mockWriteFileSync = fs.writeFileSync as jest.MockedFunction<typeof fs.writeFileSync>;
 const mockReadFileSync = fs.readFileSync as jest.MockedFunction<typeof fs.readFileSync>;

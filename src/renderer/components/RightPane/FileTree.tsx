@@ -58,5 +58,4 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath, onFileClick, refre
     </div>
   );
 };
-
-export default FileTree;
+

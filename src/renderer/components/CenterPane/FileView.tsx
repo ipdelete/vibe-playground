@@ -122,5 +122,4 @@ export const FileView: React.FC<FileViewProps> = ({ filePath, fileName }) => {
     <div className="file-view-container" ref={containerRef} />
   );
 };
-
-export default FileView;
+

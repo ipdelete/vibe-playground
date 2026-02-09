@@ -13,8 +13,8 @@ The codebase is generally well-structured with clear separation between main pro
 | Severity | Count | Resolved |
 |----------|-------|----------|
 | High     | 7     | 6        |
-| Medium   | 15    | 7        |
-| Low      | 10    | 3        |
+| Medium   | 15    | 8        |
+| Low      | 10    | 7        |
 
 ---
 
@@ -239,21 +239,21 @@ The codebase is generally well-structured with clear separation between main pro
 
 ---
 
-### M15. Unused `MakerRpm` Import in forge.config.ts
+### M15. ~~Unused `MakerRpm` Import in forge.config.ts~~ ✅ RESOLVED
 
-`forge.config.ts:5` — imported but intentionally disabled (comment says ARM binary issue). The import is still dead code.
+**Resolved in v0.10.13** — Removed unused `MakerRpm` import from `forge.config.ts`. Existing comment explaining RPM is disabled was kept.
 
-**Fix:** Remove the import; add a comment explaining RPM is not supported.
+~~`forge.config.ts:5` — imported but intentionally disabled (comment says ARM binary issue). The import is still dead code.~~
 
 ---
 
 ## Low Severity
 
-### L1. Unused `_event` Parameter Across All IPC Handlers
+### L1. ~~Unused `_event` Parameter Across All IPC Handlers~~ ✅ WON'T FIX
 
-`src/main/ipc/agent.ts:10,39,44,49` and other IPC files — underscore-prefixed event parameter passed to every handler but never used.
+**Won't fix** — `_event` is a required positional parameter in Electron's `ipcMain.handle(channel, (event, ...args))` callback signature. The underscore prefix is the standard TypeScript convention for intentionally unused positional params. No change needed.
 
-Not a functional issue but adds visual noise.
+~~`src/main/ipc/agent.ts:10,39,44,49` and other IPC files — underscore-prefixed event parameter passed to every handler but never used.~~
 
 ---
 
@@ -308,29 +308,35 @@ Errors during shutdown are silently discarded.
 
 ---
 
-### L8. Unused Default Exports in Several Components
+### L8. ~~Unused Default Exports in Several Components~~ ✅ RESOLVED
 
-These files export both named and default, but only the named export is used:
-- `src/renderer/components/CenterPane/FileView.tsx`
-- `src/renderer/components/RightPane/FileTree.tsx`
-- `src/renderer/components/RightPane/FileTreeNode.tsx`
-- `src/renderer/components/Icon.tsx`
+**Resolved in v0.10.13** — Removed unused `export default` from FileView.tsx, FileTree.tsx, FileTreeNode.tsx, and Icon.tsx. All consumers use named imports.
 
----
-
-### L9. Unused Test Imports
-
-Several test files have unused imports:
-- `AgentService.test.ts:1` — `os` module
-- `FileService.test.ts:14` — `FileEntry` type
-- `GitService.test.ts:9` — `GitStatusMap` type
-- `SessionService.test.ts:3` — duplicate `SessionService` import
+~~These files export both named and default, but only the named export is used:~~
+~~- `src/renderer/components/CenterPane/FileView.tsx`~~
+~~- `src/renderer/components/RightPane/FileTree.tsx`~~
+~~- `src/renderer/components/RightPane/FileTreeNode.tsx`~~
+~~- `src/renderer/components/Icon.tsx`~~
 
 ---
 
-### L10. `allowJs: true` in tsconfig.json with No JS Files
+### L9. ~~Unused Test Imports~~ ✅ RESOLVED
 
-`tsconfig.json` enables `allowJs` but the `src/` directory contains only `.ts` and `.tsx` files.
+**Resolved in v0.10.13** — Removed unused `os` import from AgentService.test.ts, `FileEntry` from FileService.test.ts, `GitStatusMap` from GitService.test.ts, and merged duplicate imports in SessionService.test.ts.
+
+~~Several test files have unused imports:~~
+~~- `AgentService.test.ts:1` — `os` module~~
+~~- `FileService.test.ts:14` — `FileEntry` type~~
+~~- `GitService.test.ts:9` — `GitStatusMap` type~~
+~~- `SessionService.test.ts:3` — duplicate `SessionService` import~~
+
+---
+
+### L10. ~~`allowJs: true` in tsconfig.json with No JS Files~~ ✅ RESOLVED
+
+**Resolved in v0.10.13** — Removed `allowJs: true` from `tsconfig.json`. No `.js` files exist in `src/`.
+
+~~`tsconfig.json` enables `allowJs` but the `src/` directory contains only `.ts` and `.tsx` files.~~
 
 ---
 
@@ -346,3 +352,8 @@ Several test files have unused imports:
 | 6 | ~~Break up CopilotService.sendMessage (H4)~~ | ✅ Done (v0.10.10) |
 | 7 | ~~Extract renderer custom hooks (M7, M9, M10)~~ | ✅ Done (v0.10.11) |
 | 8 | ~~Convert ConversationService to async (M11)~~ | ✅ Done (v0.10.12) |
+| 9 | ~~Remove dead code & unused imports (M15, L1, L8, L9, L10)~~ | ✅ Done (v0.10.13) |
+| 10 | Quick config fixes (M13, M14, L2, L7) | Easy wins |
+| 11 | Small refactors (L6, M12, M4) | Clarify implicit patterns |
+| 12 | Component refactors (M8, M5, M6) | Reduce complexity |
+| 13 | Rewrite SessionService.load() single-pass validation (H5) | Flatten deeply nested logic |

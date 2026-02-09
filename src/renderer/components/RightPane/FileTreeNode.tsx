@@ -130,5 +130,4 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({
     </div>
   );
 };
-
-export default FileTreeNode;
+

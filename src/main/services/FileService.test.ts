@@ -10,7 +10,7 @@ jest.mock('fs', () => ({
 }));
 
 // Import after mocking
-import { fileService, FileEntry } from './FileService';
+import { fileService } from './FileService';
 
 const mockReaddir = fs.promises.readdir as jest.MockedFunction<typeof fs.promises.readdir>;
 const mockReadFile = fs.promises.readFile as jest.MockedFunction<typeof fs.promises.readFile>;
