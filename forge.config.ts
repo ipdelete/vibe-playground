@@ -57,7 +57,9 @@ const config: ForgeConfig = {
   rebuildConfig: {},
   makers: [
     new MakerSquirrel({
+      name: 'cmux',
       setupIcon: './img/cmux-icon.ico',
+      shortcutName: 'cmux',
     }),
     new MakerZIP({}, ['darwin', 'linux']),
     new MakerDeb({}),
