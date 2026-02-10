@@ -91,7 +91,7 @@ These replace the existing screenshots referenced in the repo root README.
 
 These go in the how-to guides.
 
-### 7. `getting-started-first-workspace.png`
+### 2. `getting-started-first-workspace.png`
 **Shows:** A fresh workspace just created — empty terminal, file tree loaded
 **Setup:**
 - Single workspace in the Navigator, just created via `+`
@@ -99,7 +99,7 @@ These go in the how-to guides.
 - Explorer showing the directory tree
 **Used in:** docs/getting-started.md
 
-### 8. `workspace-navigator.png`
+### 3. `workspace-navigator.png`
 **Shows:** Navigator with multiple workspaces, one with nested open files
 **Setup:**
 - 3+ workspaces in the Navigator
@@ -107,21 +107,21 @@ These go in the how-to guides.
 - Active workspace highlighted
 **Used in:** docs/managing-workspaces.md
 
-### 9. `workspace-context-menu.png`
+### 4. `workspace-context-menu.png`
 **Shows:** Right-click context menu on a workspace in the Navigator
 **Setup:**
 - Right-click a workspace in the Navigator
 - Context menu visible with Rename / Close options
 **Used in:** docs/managing-workspaces.md
 
-### 10. `workspace-scratch-pad.png`
+### 5. `workspace-scratch-pad.png`
 **Shows:** Scratch Pad open with notes (close-up, docs version)
 **Setup:**
 - Same as #6 but can be a tighter crop focused on the Scratch Pad area
 - A few lines of realistic notes visible
 **Used in:** docs/managing-workspaces.md
 
-### 11. `agent-created-from-chat.png`
+### 6. `agent-created-from-chat.png`
 **Shows:** Chat message that created an agent + the agent appearing in the Navigator
 **Setup:**
 - In Chat, send "Create an agent for ~/src/some-project"
@@ -129,14 +129,14 @@ These go in the how-to guides.
 - Chat response confirming creation visible in Main View
 **Used in:** docs/working-with-agents.md
 
-### 12. `agent-activity-feed.png`
+### 7. `agent-activity-feed.png`
 **Shows:** Close-up of an agent's activity feed with various card types
 **Setup:**
 - Agent with some completed work — mix of tool cards (success/failure), assistant message, and done card
 - At least one tool card expanded to show results
 **Used in:** docs/working-with-agents.md
 
-### 13. `chat-conversations.png`
+### 8. `chat-conversations.png`
 **Shows:** Conversations pane with multiple conversations listed
 **Setup:**
 - Have 3+ conversations with different names
@@ -144,14 +144,14 @@ These go in the how-to guides.
 - Main View showing that conversation's messages
 **Used in:** docs/using-copilot-chat.md
 
-### 14. `chat-model-picker.png`
+### 9. `chat-model-picker.png`
 **Shows:** Model picker dropdown open
 **Setup:**
 - Click the model picker in Chat
 - Dropdown showing available models
 **Used in:** docs/using-copilot-chat.md
 
-### 15. `explorer-file-tree.png`
+### 10. `explorer-file-tree.png`
 **Shows:** Explorer with expanded folders and various file types
 **Setup:**
 - A workspace with a non-trivial project open
@@ -160,7 +160,7 @@ These go in the how-to guides.
 - Git status colors visible on modified files
 **Used in:** docs/browsing-files.md
 
-### 16. `file-nested-in-navigator.png`
+### 11. `file-nested-in-navigator.png`
 **Shows:** A file open in Main View with the file visible nested under its workspace in Navigator
 **Setup:**
 - Click a file in the Explorer to open it
@@ -172,25 +172,19 @@ These go in the how-to guides.
 
 ## Checklist
 
-**README (replace old screenshots):**
-- [ ] 1. `hero-demo.gif` — Animated hero GIF (~15-20s workflow demo)
-- [ ] 2. `workspace-overview.png` — Static fallback hero
-- [ ] 3. `agent-activity.png` — Chat-Driven Agents section
-- [ ] 4. `copilot-chat.png` — Copilot Chat section
-- [ ] 5. `file-view.png` — Monaco Editor section
-- [ ] 6. `git-status.png` — Git Integration section
-- [ ] 7. `scratch-pad.png` — Scratch Pad section
+**README:**
+- [ ] 1. `hero-demo.gif` — Animated hero GIF
 
 **docs/:**
-- [ ] 8. `getting-started-first-workspace.png`
-- [ ] 9. `workspace-navigator.png`
-- [ ] 10. `workspace-context-menu.png`
-- [ ] 11. `workspace-scratch-pad.png`
-- [ ] 12. `agent-created-from-chat.png`
-- [ ] 13. `agent-activity-feed.png`
-- [ ] 14. `chat-conversations.png`
-- [ ] 15. `chat-model-picker.png`
-- [ ] 16. `explorer-file-tree.png`
-- [ ] 17. `file-nested-in-navigator.png`
+- [ ] 2. `getting-started-first-workspace.png`
+- [ ] 3. `workspace-navigator.png`
+- [ ] 4. `workspace-context-menu.png`
+- [ ] 5. `workspace-scratch-pad.png`
+- [ ] 6. `agent-created-from-chat.png`
+- [ ] 7. `agent-activity-feed.png`
+- [ ] 8. `chat-conversations.png`
+- [ ] 9. `chat-model-picker.png`
+- [ ] 10. `explorer-file-tree.png`
+- [ ] 11. `file-nested-in-navigator.png`
 
 Once screenshots are captured, tell me and I'll wire them into the docs and README.

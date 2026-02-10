@@ -6,6 +6,10 @@ Step-by-step guides for using cmux. Each guide uses consistent terminology — s
 
 - [Getting Started](getting-started.md) — Install, launch, and create your first workspace
 
+## Features
+
+- [Features](features.md) — Detailed breakdown of all features
+
 ## Workspaces
 
 - [Managing Workspaces](managing-workspaces.md) — Create, rename, switch, and close workspaces
@@ -25,4 +29,5 @@ Step-by-step guides for using cmux. Each guide uses consistent terminology — s
 ## Reference
 
 - [Glossary](glossary.md) — Naming conventions and terminology
+- [Keyboard Shortcuts](keyboard-shortcuts.md) — All keyboard shortcuts
 - [Configuration](configuration.md) — Environment variables and feature flags
