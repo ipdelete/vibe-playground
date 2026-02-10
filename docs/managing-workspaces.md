@@ -17,6 +17,8 @@ Click any workspace in the Navigator. This updates:
 
 Workspace terminals preserve their state when you switch away and back.
 
+![Navigator with multiple workspaces](../img/workspace-navigator.png)
+
 ### Keyboard Shortcuts
 
 | Action | Shortcut |
@@ -34,6 +36,8 @@ Workspace terminals preserve their state when you switch away and back.
 
 Or select a workspace and press `F2`.
 
+![Context menu](../img/workspace-context-menu.png)
+
 ## Close a Workspace
 
 1. Right-click the workspace in the Navigator
@@ -48,6 +52,8 @@ Each workspace has a **Scratch Pad** — a quick notepad for jotting down notes,
 - Press `Ctrl+J` to toggle the Scratch Pad open/closed
 - Notes are saved per workspace, so each workspace has its own scratch pad
 - Use it to keep track of TODOs, paste snippets, or plan your next steps
+
+![Scratch Pad](../img/workspace-scratch-pad.png)
 
 ## Open Files Under a Workspace
 

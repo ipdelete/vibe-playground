@@ -10,12 +10,16 @@ The Explorer (right pane) shows the file tree for the selected workspace or agen
 
 The Explorer always shows the directory of the currently selected workspace or agent, even when you're viewing a file.
 
+![Explorer file tree](../img/explorer-file-tree.png)
+
 ## Open a File
 
 Click any file in the Explorer. This:
 
 1. Opens the file in **Main View** with syntax highlighting (Monaco Editor)
 2. Adds the file as a nested item under its workspace in the **Navigator**
+
+![File nested in Navigator](../img/file-nested-in-navigator.png)
 
 Supported languages include TypeScript, JavaScript, JSON, Markdown, CSS, HTML, Python, YAML, and more.
 

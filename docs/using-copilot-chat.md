@@ -14,6 +14,8 @@ Type in the input box at the bottom of Main View and press `Enter`. Responses st
 
 Click the model picker above the input box to choose which Copilot model to use. The selected model applies to the current conversation.
 
+![Model picker](../img/chat-model-picker.png)
+
 ## Create Agents from Chat
 
 Chat can create agents that work in your repositories. Just include a directory path:
@@ -25,6 +27,8 @@ See [Working with Agents](working-with-agents.md) for the full workflow.
 ## Manage Conversations
 
 The right pane shows **Conversations** when in chat mode.
+
+![Conversations pane](../img/chat-conversations.png)
 
 ### Create a New Conversation
 

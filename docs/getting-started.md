@@ -40,6 +40,8 @@ The app opens with an empty Navigator on the left, Main View in the center, and 
 3. A new workspace appears in the Navigator with a terminal in Main View
 4. The Explorer on the right shows the file tree for that directory
 
+![First workspace](../img/getting-started-first-workspace.png)
+
 You now have a fully interactive terminal scoped to your chosen directory. Type commands as you normally would — we recommend `copilot`.
 
 ## What's Next

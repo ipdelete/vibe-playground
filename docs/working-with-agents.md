@@ -13,6 +13,8 @@ Agents are AI-powered sessions created from Copilot Chat. They work autonomously
    - A **copilot icon** (distinguishing it from workspaces)
    - A **status dot** — green (idle), yellow pulsing (working), red (error)
 
+![Agent created from chat](../img/agent-created-from-chat.png)
+
 ## Monitor Agent Activity
 
 Click the agent in the Navigator. Main View shows the **activity feed** — a card-based UI with:
@@ -23,6 +25,8 @@ Click the agent in the Navigator. Main View shows the **activity feed** — a ca
 - **Done card** — green confirmation when the agent finishes
 
 The Explorer updates to show the agent's working directory, so you can browse the files it's modifying.
+
+![Agent activity feed](../img/agent-activity-feed.png)
 
 ## Send Follow-Up Tasks
 
