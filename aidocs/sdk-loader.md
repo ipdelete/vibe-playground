@@ -32,6 +32,10 @@ Packaged apps ship a bundled Node+npm runtime and install `@github/copilot-sdk` 
 
 `ensureCopilotInstalled()` runs npm with a local prefix and cache inside userData. `SdkLoader` prefers this local install before falling back to global locations.
 
+When the CLI entrypoint is a `.js` file (e.g. `npm-loader.js`), the SDK would normally spawn it using `process.execPath`. In packaged builds with RunAsNode disabled, `SdkLoader` instead runs the CLI via the bundled Node binary and passes the JS entrypoint through `cliArgs`.
+
+After bootstrap, cmux writes a lightweight `copilot` shim into `{userData}/copilot` (e.g. `copilot.cmd` on Windows). Workspace PTYs prepend this directory to PATH so `copilot login` works without a global install.
+
 ## npm Global Prefix Resolution (fallback, 4 tiers)
 
 `getNpmGlobalPrefix()` tries four strategies in order, caching the first success:

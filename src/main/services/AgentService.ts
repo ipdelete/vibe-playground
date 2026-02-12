@@ -1,7 +1,10 @@
 // AgentService using node-pty for proper PTY support
 import * as pty from '@homebridge/node-pty-prebuilt-multiarch';
+import * as fs from 'fs';
 import * as os from 'os';
+import * as path from 'path';
 import { execSync } from 'child_process';
+import { getCopilotBootstrapDir } from './AppPaths';
 
 interface AgentInstance {
   id: string;
@@ -42,13 +45,16 @@ class AgentService {
     }
 
     const shell = this.getDefaultShell();
-    
+
+    const env = { ...process.env } as { [key: string]: string };
+    this.addCopilotShimToPath(env);
+
     const ptyProcess = pty.spawn(shell, [], {
       name: 'xterm-256color',
       cols: 80,
       rows: 24,
       cwd,
-      env: process.env as { [key: string]: string },
+      env,
     });
 
     const instance: AgentInstance = {
@@ -70,6 +76,20 @@ class AgentService {
     }
 
     return id;
+  }
+
+  private addCopilotShimToPath(env: { [key: string]: string }): void {
+    const shimDir = getCopilotBootstrapDir();
+    const shimPath = path.join(shimDir, os.platform() === 'win32' ? 'copilot.cmd' : 'copilot');
+    if (!fs.existsSync(shimPath)) return;
+
+    const pathKey = Object.keys(env).find(key => key.toLowerCase() === 'path') ?? 'PATH';
+    const delimiter = os.platform() === 'win32' ? ';' : ':';
+    const currentPath = env[pathKey] ?? '';
+    const segments = currentPath ? currentPath.split(delimiter) : [];
+    if (segments.includes(shimDir)) return;
+
+    env[pathKey] = currentPath ? `${shimDir}${delimiter}${currentPath}` : shimDir;
   }
 
   write(id: string, data: string): void {

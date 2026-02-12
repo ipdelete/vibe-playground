@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { getBundledNodeRoot, getCopilotBootstrapDir, getCopilotLocalNodeModulesDir } from './AppPaths';
 let bootstrapPromise: Promise<void> | null = null;
+const isWindows = process.platform === 'win32';
 
 export function getLocalCopilotNodeModulesDir(): string {
   return getCopilotLocalNodeModulesDir();
@@ -12,7 +13,7 @@ export function getLocalCopilotNodeModulesDir(): string {
 function getBundledNodePath(): string | null {
   const root = getBundledNodeRoot();
   if (!root) return null;
-  return process.platform === 'win32'
+  return isWindows
     ? path.join(root, 'node.exe')
     : path.join(root, 'bin', 'node');
 }
@@ -20,7 +21,7 @@ function getBundledNodePath(): string | null {
 function getBundledNpmCliPath(): string | null {
   const root = getBundledNodeRoot();
   if (!root) return null;
-  return process.platform === 'win32'
+  return isWindows
     ? path.join(root, 'node_modules', 'npm', 'bin', 'npm-cli.js')
     : path.join(root, 'lib', 'node_modules', 'npm', 'bin', 'npm-cli.js');
 }
@@ -99,12 +100,33 @@ async function runNpmInstall(): Promise<void> {
   });
 }
 
+function ensureCopilotShim(): void {
+  const cliPath = getLocalCopilotCliPath();
+  const nodePath = getBundledNodePath();
+  if (!cliPath || !nodePath) return;
+  if (!fs.existsSync(cliPath) || !fs.existsSync(nodePath)) return;
+
+  const shimPath = path.join(getCopilotBootstrapDir(), isWindows ? 'copilot.cmd' : 'copilot');
+  const shimContent = isWindows
+    ? `@echo off\r\n"${nodePath}" "${cliPath}" %*\r\n`
+    : `#!/bin/sh\n"${nodePath}" "${cliPath}" "$@"\n`;
+  const existing = fs.existsSync(shimPath) ? fs.readFileSync(shimPath, 'utf-8') : null;
+  if (existing === shimContent) return;
+
+  fs.mkdirSync(getCopilotBootstrapDir(), { recursive: true });
+  fs.writeFileSync(shimPath, shimContent, { encoding: 'utf-8' });
+  if (!isWindows) {
+    fs.chmodSync(shimPath, 0o755);
+  }
+}
+
 export async function ensureCopilotInstalled(): Promise<void> {
   if (!app.isPackaged) {
     return;
   }
 
   if (isLocalCopilotInstallReady()) {
+    ensureCopilotShim();
     return;
   }
 
@@ -118,6 +140,7 @@ export async function ensureCopilotInstalled(): Promise<void> {
     if (!isLocalCopilotInstallReady()) {
       throw new Error('Copilot runtime installation did not complete.');
     }
+    ensureCopilotShim();
   })();
 
   try {

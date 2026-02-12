@@ -8,7 +8,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { pathToFileURL } from 'url';
-import { getCopilotLogsDir } from './AppPaths';
+import { getBundledNodeRoot, getCopilotLogsDir } from './AppPaths';
 import {
   ensureCopilotInstalled,
   getLocalCopilotCliPath,
@@ -194,6 +194,12 @@ function getNpmGlobalPrefix(): string {
   );
 }
 
+function getBundledNodePath(): string | null {
+  const root = getBundledNodeRoot();
+  if (!root) return null;
+  return isWindows ? path.join(root, 'node.exe') : path.join(root, 'bin', 'node');
+}
+
 function getGlobalNodeModules(): string {
   const prefix = getNpmGlobalPrefix();
   // Windows: {prefix}/node_modules — Unix: {prefix}/lib/node_modules
@@ -308,11 +314,17 @@ export async function getSharedClient(): Promise<CopilotClientType> {
     const cliPath = await getCopilotCliPath();
     const logDir = getCopilotLogsDir();
     fs.mkdirSync(logDir, { recursive: true });
-    clientInstance = new CopilotClient({
-      cliPath,
-      logLevel: 'all',
-      cliArgs: ['--log-dir', logDir],
-    });
+    let resolvedCliPath = cliPath;
+    const cliArgs = ['--log-dir', logDir];
+    if (cliPath.endsWith('.js')) {
+      const bundledNode = getBundledNodePath();
+      if (bundledNode && fs.existsSync(bundledNode)) {
+        // Avoid process.execPath (Electron) for CLI execution in packaged builds.
+        resolvedCliPath = bundledNode;
+        cliArgs.unshift(cliPath);
+      }
+    }
+    clientInstance = new CopilotClient({ cliPath: resolvedCliPath, logLevel: 'all', cliArgs });
     await clientInstance.start();
     return clientInstance;
   })();

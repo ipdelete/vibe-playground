@@ -16,6 +16,11 @@ jest.mock('@homebridge/node-pty-prebuilt-multiarch', () => ({
   spawn: mockSpawn,
 }));
 
+// Mock electron app paths
+jest.mock('electron', () => ({
+  app: { getPath: jest.fn().mockReturnValue('/mock/userData') },
+}));
+
 // Mock child_process.execSync for worktree detection
 jest.mock('child_process', () => ({
   execSync: jest.fn(),
