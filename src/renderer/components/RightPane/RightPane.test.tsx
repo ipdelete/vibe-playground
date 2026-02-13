@@ -48,6 +48,7 @@ describe('RightPane', () => {
       selectedModel: null,
       agentEvents: {},
       agentNotes: {},
+      showHiddenFiles: false,
     };
 
     renderWithProvider(<RightPane onFileClick={() => {}} />, state);
@@ -72,6 +73,7 @@ describe('RightPane', () => {
       selectedModel: null,
       agentEvents: {},
       agentNotes: {},
+      showHiddenFiles: false,
     };
 
     renderWithProvider(<RightPane onFileClick={() => {}} />, state);
@@ -102,6 +104,7 @@ describe('RightPane', () => {
       selectedModel: null,
       agentEvents: {},
       agentNotes: {},
+      showHiddenFiles: false,
     };
 
     renderWithProvider(<RightPane onFileClick={onFileClick} />, state);
@@ -128,6 +131,7 @@ describe('RightPane', () => {
       selectedModel: null,
       agentEvents: {},
       agentNotes: {},
+      showHiddenFiles: false,
     };
 
     renderWithProvider(<RightPane onFileClick={onFileClick} />, state);
@@ -155,6 +159,7 @@ describe('RightPane', () => {
       selectedModel: null,
       agentEvents: {},
       agentNotes: {},
+      showHiddenFiles: false,
     };
 
     renderWithProvider(<RightPane onFileClick={() => {}} />, state1);
@@ -179,6 +184,7 @@ describe('RightPane', () => {
       selectedModel: null,
       agentEvents: {},
       agentNotes: {},
+      showHiddenFiles: false,
     };
 
     renderWithProvider(<RightPane onFileClick={() => {}} />, state2);
@@ -201,6 +207,7 @@ describe('RightPane', () => {
       selectedModel: null,
       agentEvents: {},
       agentNotes: {},
+      showHiddenFiles: false,
     };
 
     renderWithProvider(<RightPane onFileClick={() => {}} />, state);

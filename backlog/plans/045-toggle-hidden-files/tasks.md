@@ -23,19 +23,19 @@ Add optional `showHidden?: boolean` param to `fs.readDirectory` in preload and E
 
 ## Phase 2: State Management
 
-### T005 [TEST] AppAction and reducer tests
+### T005 [TEST] AppAction and reducer tests ✅
 Add tests to `agentReducer.test.ts` verifying `SET_SHOW_HIDDEN_FILES` action updates `showHiddenFiles` in state.
 **File:** `src/renderer/contexts/agentReducer.test.ts`
 
-### T006 [IMPL] Types — AppState + AppAction
+### T006 [IMPL] Types — AppState + AppAction ✅
 Add `showHiddenFiles: boolean` to `AppState` and `SET_SHOW_HIDDEN_FILES` action to `AppAction` union.
 **File:** `src/shared/types.ts`
 
-### T007 [IMPL] Reducer handler
+### T007 [IMPL] Reducer handler ✅
 Add `SET_SHOW_HIDDEN_FILES` case to `agentReducer`. Add to `AgentAction` type extract.
 **File:** `src/renderer/contexts/agentReducer.ts`
 
-### T008 [IMPL] Initial state
+### T008 [IMPL] Initial state ✅
 Update `initialState` in `AppStateContext.tsx` to include `showHiddenFiles: false`.
 **File:** `src/renderer/contexts/AppStateContext.tsx`
 
