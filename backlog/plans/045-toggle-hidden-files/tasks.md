@@ -2,22 +2,22 @@
 
 ## Phase 1: Core Backend — FileService + IPC
 
-### T001 [TEST] FileService showHidden parameter tests
+### T001 [TEST] FileService showHidden parameter tests ✅
 Add tests to `FileService.test.ts` verifying:
 - `readDirectory(path)` still filters dotfiles (backward compat)
 - `readDirectory(path, { showHidden: false })` filters dotfiles
 - `readDirectory(path, { showHidden: true })` returns dotfiles
 **File:** `src/main/services/FileService.test.ts`
 
-### T002 [IMPL] FileService showHidden parameter
+### T002 [IMPL] FileService showHidden parameter ✅
 Modify `FileService.readDirectory` to accept optional `options?: { showHidden?: boolean }` param. When `showHidden` is truthy, skip the dotfile filter.
 **File:** `src/main/services/FileService.ts`
 
-### T003 [IMPL] IPC passthrough
+### T003 [IMPL] IPC passthrough ✅
 Update `fs:readDirectory` handler to pass `showHidden` param to `fileService.readDirectory`.
 **File:** `src/main/ipc/files.ts`
 
-### T004 [IMPL] Preload API update
+### T004 [IMPL] Preload API update ✅
 Add optional `showHidden?: boolean` param to `fs.readDirectory` in preload and ElectronAPI interface.
 **File:** `src/preload.ts`
 
